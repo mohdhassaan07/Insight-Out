@@ -19,13 +19,16 @@ function arrayChunks<T>(arr: T[], size: number): T[][] {
     return chunks;
 }
 
-function buildPrompt(feedbacks: any[]) {
+function buildPrompt(feedbacks: string[]) {
     const CATEGORIES = [
         "Bug",
         "Feature Request",
         "Performance Issue",
         "UI/UX Issue",
         "Positive Feedback",
+        "Pricing",
+        "Support",
+        "Praise",
         "Other"
     ];
 
@@ -35,7 +38,19 @@ You are a product feedback classifier.
 Classify each feedback into ONE category from:
 ${CATEGORIES.join(", ")}
 
-Return JSON array only.
+STRICT RULES:
+- Return ONLY valid JSON
+- NO markdown
+- NO explanations
+- Confidence must vary per item
+- confidence range: 0.0 to 1.0
+
+Confidence meaning:
+0.9–1.0 very clear
+0.6–0.8 clear
+0.3–0.5 ambiguous
+0.0–0.2 unclear
+
 Format:
 [
   { "feedback": "...", "category": "...", "confidence": 0.0 }
@@ -44,6 +59,7 @@ Format:
 Feedbacks:
 ${feedbacks.map((f, i) => `${i + 1}. ${f}`).join("\n")}
 `;
+
 }
 
 function extractJSON(text: string) {
@@ -58,7 +74,7 @@ function extractJSON(text: string) {
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-async function classifyWithGemini(feedbacks: any[]) {
+async function classifyWithGemini(feedbacks: string[]) {
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     const prompt = buildPrompt(feedbacks);
@@ -108,7 +124,6 @@ export async function POST(req: Request) {
         const batches = arrayChunks(processed, 10);
         const finalResults: any = [];
         for (const batch of batches) {
-            console.log(batch)
             const classified = await classifyWithGemini(batch);
             finalResults.push(...classified);
         }
