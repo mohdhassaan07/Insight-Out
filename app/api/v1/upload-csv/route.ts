@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { Readable } from "stream";
 import csv from "csv-parser";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import prisma from "@/lib/prisma";
+
 
 function preprocessFeedback(text: string): string {
     return text
@@ -35,7 +37,7 @@ function buildPrompt(feedbacks: string[]) {
     return `
 You are a product feedback classifier.
 
-Classify each feedback into ONE category from:
+Classify each feedback into ONE category and assign sentiment (Positive, Neutral, Negative) from:
 ${CATEGORIES.join(", ")}
 
 STRICT RULES:
@@ -53,7 +55,7 @@ Confidence meaning:
 
 Format:
 [
-  { "feedback": "...", "category": "...", "confidence": 0.0 }
+  { "feedback": "...", "category": "...", "confidence": 0.0, "sentiment": "..." },
 ]
 
 Feedbacks:
@@ -106,6 +108,7 @@ export async function POST(req: Request) {
         const buffer = Buffer.from(await file.arrayBuffer());
         const results: any[] = [];
 
+        // Parse CSV through promise
         await new Promise<void>((resolve, reject) => {
             Readable.from(buffer)
                 .pipe(csv())
@@ -116,19 +119,51 @@ export async function POST(req: Request) {
                 .on("error", reject);
         });
 
-        const processed = results
-            .map(row => row.feedback)
-            .filter(f => typeof f === "string" && f.trim().length > 0)
-            .map(f => preprocessFeedback(f));
+        //preprocess and classify
+        const rows = results
+            .filter(
+                (row) =>
+                    typeof row.feedback === "string" &&
+                    row.feedback.trim().length > 0
+            )
+            .map((row) => ({
+                feedback: preprocessFeedback(row.feedback),
+                source: row.source
+            }));
 
-        const batches = arrayChunks(processed, 10);
+        const batches = arrayChunks(rows, 10);
         const finalResults: any = [];
+
         for (const batch of batches) {
-            const classified = await classifyWithGemini(batch);
-            finalResults.push(...classified);
+            const texts = batch.map(b => b.feedback); // only text to AI
+            const classified = await classifyWithGemini(texts);
+            console.log("batch : ", batch)
+            // merge AI result + source
+            classified.forEach((ai: any, index: number) => {
+                finalResults.push({
+                    feedback: batch[index].feedback,
+                    source: batch[index].source,
+                    category: ai.category,
+                    confidence: ai.confidence,
+                    sentiment: ai.sentiment,
+                    status : ai.confidence <0.85 ? "self_approved" : "auto_approved"
+                });
+            });
         }
 
-        return NextResponse.json({ data: finalResults }, { status: 200 });
+        // Store results in the database
+        const feedbackdata = await prisma.feedback.createMany({
+            data: finalResults.map((item: any) => ({
+                feedback: item.feedback,
+                category: item.category,
+                confidence: item.confidence,
+                sentiment: item.sentiment,
+                source: item.source,
+                status : item.status
+            }))
+        })
+
+        return NextResponse.json({ data: feedbackdata }, { status: 200 });
 
     } catch (error: any) {
         return NextResponse.json(

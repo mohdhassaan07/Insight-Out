@@ -8,18 +8,29 @@ datasource db {
 }
 
 model Feedback {
-  id    Int     @id @default(autoincrement())
-  feedback_text  String  
-  primary_category categories
-  confidence 
+  id      String   @id @default(uuid())
+  feedback_text   String
+  primary_category  Categories
+  confidence  Float
+  sentiment   Sentiments
+  source   String?
+  status   String   @default("auto_approved")
+  createdAt DateTime  @default(now())
 }
-enum categories{
-  Bug,
-  Feature Request,
-  Performance,
-  UI/UX,
-  Pricing,
-  Support,
-  Praise,
+
+enum Categories{
+  Bug
+  Feature_Request
+  Performance
+  UI_UX
+  Pricing
+  Support
+  Praise
   Other
+}
+
+enum Sentiments{
+  Positive
+  Neutral
+  Negative
 }
