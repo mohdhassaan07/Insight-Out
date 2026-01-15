@@ -14,8 +14,13 @@ model Feedback {
   confidence  Float
   sentiment   Sentiments
   source   String?
-  status   String   @default("auto_approved")
+  status   Status   @default(auto_approved)
   createdAt DateTime  @default(now())
+}
+
+enum Status{
+  auto_approved
+  self_approved
 }
 
 enum Categories{
@@ -23,6 +28,7 @@ enum Categories{
   Feature_Request
   Performance
   UI_UX
+  Positive_Feedback
   Pricing
   Support
   Praise

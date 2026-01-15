@@ -24,10 +24,10 @@ function arrayChunks<T>(arr: T[], size: number): T[][] {
 function buildPrompt(feedbacks: string[]) {
     const CATEGORIES = [
         "Bug",
-        "Feature Request",
-        "Performance Issue",
-        "UI/UX Issue",
-        "Positive Feedback",
+        "Feature_Request",
+        "Performance",
+        "UI_UX",
+        "Positive_Feedback",
         "Pricing",
         "Support",
         "Praise",
@@ -137,30 +137,24 @@ export async function POST(req: Request) {
         for (const batch of batches) {
             const texts = batch.map(b => b.feedback); // only text to AI
             const classified = await classifyWithGemini(texts);
-            console.log("batch : ", batch)
+
             // merge AI result + source
             classified.forEach((ai: any, index: number) => {
                 finalResults.push({
-                    feedback: batch[index].feedback,
+                    feedback_text: batch[index].feedback,
                     source: batch[index].source,
-                    category: ai.category,
+                    primary_category: ai.category,
                     confidence: ai.confidence,
                     sentiment: ai.sentiment,
                     status : ai.confidence <0.85 ? "self_approved" : "auto_approved"
                 });
             });
         }
-
+        console.log("Final Results:", finalResults);
         // Store results in the database
         const feedbackdata = await prisma.feedback.createMany({
-            data: finalResults.map((item: any) => ({
-                feedback: item.feedback,
-                category: item.category,
-                confidence: item.confidence,
-                sentiment: item.sentiment,
-                source: item.source,
-                status : item.status
-            }))
+            data: finalResults,
+            skipDuplicates: true,
         })
 
         return NextResponse.json({ data: feedbackdata }, { status: 200 });
