@@ -3,7 +3,9 @@ import { Readable } from "stream";
 import csv from "csv-parser";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import prisma from "@/lib/prisma";
+import { v7 as uuidv7 } from "uuid";
 
+const id = uuidv7();
 
 function preprocessFeedback(text: string): string {
     return text
@@ -141,6 +143,7 @@ export async function POST(req: Request) {
             // merge AI result + source
             classified.forEach((ai: any, index: number) => {
                 finalResults.push({
+                    id : uuidv7(),
                     feedback_text: batch[index].feedback,
                     source: batch[index].source,
                     primary_category: ai.category,

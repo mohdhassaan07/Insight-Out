@@ -7,15 +7,44 @@ datasource db {
   provider = "postgresql"
 }
 
+model User{
+  id   String   @id  @default(uuid()) 
+  name   String?
+  email  String  @unique
+  password  String
+  role  Role  @default(Admin)
+  organizationId  String
+  organization  Organization  @relation(fields : [organizationId], references : [id])
+  createdAt DateTime  @default(now())
+}
+
+model Organization{
+  id  String  @id  @default(uuid())
+  name String?
+  plan  Plan  @default(Free)
+  createdAt   DateTime  @default(now())
+  users       User[]
+  feedbacks   Feedback[]
+}
+
 model Feedback {
-  id      String   @id @default(uuid())
+  id      String   @id @db.Uuid
   feedback_text   String
   primary_category  Categories
   confidence  Float
   sentiment   Sentiments
   source   String?
   status   Status   @default(auto_approved)
+  organizationId  String
+  organization  Organization  @relation(fields : [organizationId], references : [id])
   createdAt DateTime  @default(now())
+  @@index([primary_category,sentiment, organizationId])
+}
+
+enum Plan{
+  Free
+  Pro
+  Premium
 }
 
 enum Status{
@@ -39,4 +68,8 @@ enum Sentiments{
   Positive
   Neutral
   Negative
+}
+
+enum Role{
+  Admin
 }
