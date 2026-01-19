@@ -18,7 +18,7 @@ const handler = NextAuth({
                 if (!credentials?.email || !credentials?.password) {
                     throw new Error("Missing credentials");
                 }
-
+                console.log("Authorizing user with email:", credentials.email);
                 const user = await prisma.user.findUnique({
                     where: { email: credentials.email }
                 });
@@ -58,6 +58,11 @@ const handler = NextAuth({
             session.user.role = token.role as string;
             return session;
         }
-    }
+    },
+    pages: {
+        signIn: '/signin',
+        signOut: '/signout',
+    },
+    secret : process.env.NEXTAUTH_SECRET,
 })
 export { handler as GET, handler as POST };
