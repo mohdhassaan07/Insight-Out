@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { Readable } from "stream";
 import csv from "csv-parser";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import prisma from "@/lib/prisma";
+import prisma from "@/src/lib/prisma";
 import { v7 as uuidv7 } from "uuid";
 
 const id = uuidv7();
