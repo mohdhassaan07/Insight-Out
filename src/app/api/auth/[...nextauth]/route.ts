@@ -38,6 +38,7 @@ const handler = NextAuth({
 
                 return {
                     id: user.id,
+                    name : user.name,
                     email: user.email,
                     organizationId: user.organizationId,
                     role: user.role
@@ -48,12 +49,14 @@ const handler = NextAuth({
     callbacks: {
         jwt({ token, user }) {
             if (user) {
+                token.name = user.name;
                 token.organizationId = user.organizationId;
                 token.role = user.role;
             }
             return token;
         },
         session({ session, token }) {
+            session.user.name = token.name as string;
             session.user.organizationId = token.organizationId as string;
             session.user.role = token.role as string;
             return session;
