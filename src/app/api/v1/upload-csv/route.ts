@@ -4,7 +4,8 @@ import csv from "csv-parser";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import prisma from "@/src/lib/prisma";
 import { v7 as uuidv7 } from "uuid";
-
+import { authOptions } from "@/src/lib/auth"
+import { getServerSession } from "next-auth";
 const id = uuidv7();
 
 function preprocessFeedback(text: string): string {
@@ -91,6 +92,10 @@ async function classifyWithGemini(feedbacks: string[]) {
 
 export async function POST(req: Request) {
     try {
+        const session = await getServerSession(authOptions);
+        if (!session) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
         const formData = await req.formData();
         const file = formData.get("file") as File || null;
         if (!file) {
@@ -149,7 +154,8 @@ export async function POST(req: Request) {
                     primary_category: ai.category,
                     confidence: ai.confidence,
                     sentiment: ai.sentiment,
-                    status : ai.confidence <0.85 ? "self_approved" : "auto_approved"
+                    status : ai.confidence <0.85 ? "self_approved" : "auto_approved",
+                    organizationId : session?.user.organizationId
                 });
             });
         }

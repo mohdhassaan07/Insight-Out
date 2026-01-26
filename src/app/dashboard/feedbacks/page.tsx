@@ -1,11 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import DashboardLayout from "@/src/components/layout/DashboardLayout";
 import Card, { CardContent, CardHeader } from "@/src/components/ui/Card";
 import Badge from "@/src/components/ui/Badge";
 import Button from "@/src/components/ui/Button";
 import Input from "@/src/components/ui/Input";
 import { useSession } from "next-auth/react";
+import axios from "axios";
 
 // Mock data - in production, fetch from API
 
@@ -64,7 +65,6 @@ function formatDate(dateString: string) {
 }
 
 export default function FeedbacksPage() {
-  const { data: session } = useSession();
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedSentiment, setSelectedSentiment] = useState("All");
@@ -76,6 +76,19 @@ export default function FeedbacksPage() {
     const matchesSentiment = selectedSentiment === "All" || feedback.sentiment === selectedSentiment;
     return matchesSearch && matchesCategory && matchesSentiment;
   });
+
+  useEffect(() => {
+    async function fetchFeedbacks() {
+      try {
+        const response = await axios('/api/v1/feedbacks');
+        console.log(response.data);
+      } catch (error) {
+        console.error("Failed to fetch feedbacks:", error);
+      }
+
+    }
+    fetchFeedbacks();
+  }, []);
 
   return (
     <DashboardLayout>
