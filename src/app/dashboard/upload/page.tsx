@@ -3,6 +3,7 @@ import { useState, useRef } from "react";
 import DashboardLayout from "@/src/components/layout/DashboardLayout";
 import Card, { CardContent, CardHeader } from "@/src/components/ui/Card";
 import Button from "@/src/components/ui/Button";
+import axios from "axios";
 
 export default function UploadPage() {
   const [isDragging, setIsDragging] = useState(false);
@@ -56,17 +57,14 @@ export default function UploadPage() {
         setUploadProgress((prev) => Math.min(prev + 10, 90));
       }, 200);
 
-      const response = await fetch("/api/v1/upload-csv", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await axios.post("/api/v1/upload-csv", formData);
 
       clearInterval(progressInterval);
       setUploadProgress(100);
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (response.ok) {
+      if (response.status === 200) {
         setUploadStatus("success");
         setMessage(data.message || "File uploaded and processed successfully!");
       } else {
@@ -183,7 +181,7 @@ export default function UploadPage() {
                     </div>
                     <div className="h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                       <div 
-                        className="h-full bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full transition-all duration-300"
+                        className="h-full bg-linear-to-r from-indigo-600 to-purple-600 rounded-full transition-all duration-300"
                         style={{ width: `${uploadProgress}%` }}
                       />
                     </div>
@@ -256,7 +254,7 @@ export default function UploadPage() {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-indigo-500 rounded-full" />
-                    <span className="text-sm text-zinc-700 dark:text-zinc-300 font-medium">feedback_text</span>
+                    <span className="text-sm text-zinc-700 dark:text-zinc-300 font-medium">feedback</span>
                     <span className="text-xs text-zinc-500">(required)</span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -279,19 +277,19 @@ export default function UploadPage() {
                   <h3 className="text-sm font-medium text-zinc-900 dark:text-white mb-2">What happens next?</h3>
                   <ul className="space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
                     <li className="flex items-start gap-2">
-                      <svg className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
                       AI categorizes each feedback
                     </li>
                     <li className="flex items-start gap-2">
-                      <svg className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
                       Sentiment is analyzed
                     </li>
                     <li className="flex items-start gap-2">
-                      <svg className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
                       Results saved to dashboard
