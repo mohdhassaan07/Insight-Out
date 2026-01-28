@@ -5,13 +5,13 @@ import Card, { CardContent, CardHeader } from "@/src/components/ui/Card";
 import Badge from "@/src/components/ui/Badge";
 import Button from "@/src/components/ui/Button";
 import Input from "@/src/components/ui/Input";
-import { useSession } from "next-auth/react";
-import axios from "axios";
+import { usefeedbackStore } from "@/src/store/feedbackStore";
+import { FeedbackSkeleton, LoadingCard } from "@/src/components/ui/Loading";
 
 // Mock data - in production, fetch from API
 
 const mockFeedbacks = [
-  { id: "1", text: "Love the new dashboard! It's so much easier to navigate and find what I need.", category: "Praise", sentiment: "Positive", confidence: 0.95, source: "Email", status: "auto_approved", createdAt: "2026-01-23T10:30:00Z" },
+  { id: "1", feedback_text: "Love the new dashboard! It's so much easier to navigate and find what I need.", primary_category: "Praise", sentiment: "Positive", confidence: 0.95, source: "Email", status: "auto_approved", createdAt: "2026-01-23T10:30:00Z" },
   { id: "2", text: "The export feature crashes when selecting more than 100 items. Please fix this ASAP.", category: "Bug", sentiment: "Negative", confidence: 0.89, source: "Support", status: "auto_approved", createdAt: "2026-01-23T09:15:00Z" },
   { id: "3", text: "Would be great to have dark mode support for the mobile app.", category: "Feature_Request", sentiment: "Neutral", confidence: 0.92, source: "Survey", status: "auto_approved", createdAt: "2026-01-23T08:45:00Z" },
   { id: "4", text: "Loading times are too slow on mobile devices. Takes 5+ seconds to load.", category: "Performance", sentiment: "Negative", confidence: 0.87, source: "App Store", status: "auto_approved", createdAt: "2026-01-22T16:20:00Z" },
@@ -65,29 +65,28 @@ function formatDate(dateString: string) {
 }
 
 export default function FeedbacksPage() {
+  const fetchfeedbacks = usefeedbackStore((s) => s.fetchFeedbacks);
+  const feedbacks = usefeedbackStore((s) => s.feedbacks);
+  const loading = usefeedbackStore((s) => s.loading);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedSentiment, setSelectedSentiment] = useState("All");
   const [selectedFeedback, setSelectedFeedback] = useState<typeof mockFeedbacks[0] | null>(null);
 
-  const filteredFeedbacks = mockFeedbacks.filter((feedback) => {
-    const matchesSearch = feedback.text.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = selectedCategory === "All" || feedback.category === selectedCategory;
+  const filteredFeedbacks = feedbacks.filter((feedback) => {
+    const matchesSearch = feedback.feedback_text.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = selectedCategory === "All" || feedback.primary_category === selectedCategory;
     const matchesSentiment = selectedSentiment === "All" || feedback.sentiment === selectedSentiment;
     return matchesSearch && matchesCategory && matchesSentiment;
   });
 
-  useEffect(() => {
-    async function fetchFeedbacks() {
-      try {
-        const response = await axios('/api/v1/feedbacks');
-        console.log(response.data);
-      } catch (error) {
-        console.error("Failed to fetch feedbacks:", error);
-      }
 
+  useEffect(() => {
+    async function loadFeedbacks() {
+      await fetchfeedbacks();
+      console.log(feedbacks);
     }
-    fetchFeedbacks();
+    loadFeedbacks();
   }, []);
 
   return (
@@ -159,47 +158,50 @@ export default function FeedbacksPage() {
 
         {/* Results count */}
         <p className="text-sm text-zinc-500 mb-4">
-          Showing {filteredFeedbacks.length} of {mockFeedbacks.length} feedbacks
+          Showing {filteredFeedbacks.length} of {feedbacks.length} feedbacks
         </p>
 
         {/* Feedback List */}
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <Card>
-              <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                {filteredFeedbacks.length === 0 ? (
-                  <div className="p-12 text-center">
-                    <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-8 h-8 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <p className="text-zinc-600 dark:text-zinc-400">No feedback found matching your filters.</p>
-                  </div>
-                ) : (
-                  filteredFeedbacks.map((feedback) => (
-                    <div
-                      key={feedback.id}
-                      onClick={() => setSelectedFeedback(feedback)}
-                      className={`px-6 py-4 cursor-pointer transition-colors ${selectedFeedback?.id === feedback.id
-                        ? "bg-indigo-50 dark:bg-indigo-900/20"
-                        : "hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
-                        }`}
-                    >
-                      <p className="text-sm text-zinc-900 dark:text-white line-clamp-2 mb-3">
-                        {feedback.text}
-                      </p>
-                      <div className="flex flex-wrap items-center gap-2">
-                        {getCategoryBadge(feedback.category)}
-                        {getSentimentBadge(feedback.sentiment)}
-                        <span className="text-xs text-zinc-500 ml-auto">
-                          {formatDate(feedback.createdAt)}
-                        </span>
+              {loading ? (FeedbackSkeleton()) : (
+                <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                  {filteredFeedbacks.length === 0 ? (
+                    <div className="p-12 text-center">
+                      <div className="w-16 h-16 bg-zinc-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-8 h-8 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
                       </div>
+                      <p className="text-zinc-600 dark:text-zinc-400">No feedback found matching your filters.</p>
                     </div>
-                  ))
-                )}
-              </div>
+                  ) : (
+                    filteredFeedbacks.map((feedback: any) => (
+                      <div
+                        key={feedback.id}
+                        onClick={() => setSelectedFeedback(feedback)}
+                        className={`px-6 py-4 cursor-pointer transition-colors ${selectedFeedback?.id === feedback.id
+                          ? "bg-indigo-50 dark:bg-indigo-900/20"
+                          : "hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+                          }`}
+                      >
+                        <p className="text-sm text-zinc-900 dark:text-white line-clamp-2 mb-3">
+                          {feedback.feedback_text}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-2">
+                          {getCategoryBadge(feedback.primary_category)}
+                          {getSentimentBadge(feedback.sentiment)}
+                          <span className="text-xs text-zinc-500 ml-auto">
+                            {formatDate(feedback.createdAt)}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+
             </Card>
           </div>
 
@@ -218,7 +220,7 @@ export default function FeedbacksPage() {
                       Feedback
                     </label>
                     <p className="mt-1 text-sm text-zinc-900 dark:text-white">
-                      {selectedFeedback.text}
+                      {selectedFeedback.feedback_text}
                     </p>
                   </div>
 
@@ -228,7 +230,7 @@ export default function FeedbacksPage() {
                         Category
                       </label>
                       <div className="mt-1">
-                        {getCategoryBadge(selectedFeedback.category)}
+                        {getCategoryBadge(selectedFeedback.primary_category ?? "Other")}
                       </div>
                     </div>
                     <div>
