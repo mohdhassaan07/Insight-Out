@@ -1,5 +1,5 @@
 "use client";
-import { use, useEffect, useState } from "react";
+import {useEffect, useState } from "react";
 import DashboardLayout from "@/src/components/layout/DashboardLayout";
 import Card, { CardContent, CardHeader } from "@/src/components/ui/Card";
 import Badge from "@/src/components/ui/Badge";
@@ -68,6 +68,7 @@ export default function FeedbacksPage() {
   const fetchfeedbacks = usefeedbackStore((s) => s.fetchFeedbacks);
   const feedbacks = usefeedbackStore((s) => s.feedbacks);
   const loading = usefeedbackStore((s) => s.loading);
+
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedSentiment, setSelectedSentiment] = useState("All");
@@ -165,7 +166,8 @@ export default function FeedbacksPage() {
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <Card>
-              {loading ? (FeedbackSkeleton()) : (
+              {loading ? (FeedbackSkeleton()
+              ) : (
                 <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
                   {filteredFeedbacks.length === 0 ? (
                     <div className="p-12 text-center">

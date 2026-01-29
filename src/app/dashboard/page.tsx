@@ -5,6 +5,7 @@ import Card, { CardContent, CardHeader } from "@/src/components/ui/Card";
 import Badge from "@/src/components/ui/Badge";
 import Button from "@/src/components/ui/Button";
 import Link from "next/link";
+import prisma from "@/src/lib/prisma";
 
 // Mock data for demonstration - in production, fetch from database
 const stats = [
@@ -99,7 +100,6 @@ function getCategoryBadge(category: string) {
 export default async function Dashboard() {
   const session = await getServerSession();
   if (!session) redirect("/signin");
-
   return (
     <DashboardLayout>
       <div className="p-8">
