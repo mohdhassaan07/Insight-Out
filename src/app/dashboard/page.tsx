@@ -7,69 +7,95 @@ import Button from "@/src/components/ui/Button";
 import Link from "next/link";
 import prisma from "@/src/lib/prisma";
 
-// Mock data for demonstration - in production, fetch from database
-const stats = [
-  { 
-    label: "Total Feedbacks", 
-    value: "1,234", 
-    change: "+12%",
-    changeType: "positive",
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-      </svg>
-    ),
-  },
-  { 
-    label: "Positive Sentiment", 
-    value: "68%", 
-    change: "+5%",
-    changeType: "positive",
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
-  },
-  { 
-    label: "Feature Requests", 
-    value: "245", 
-    change: "+18%",
-    changeType: "positive",
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-      </svg>
-    ),
-  },
-  { 
-    label: "Bug Reports", 
-    value: "89", 
-    change: "-23%",
-    changeType: "negative",
-    icon: (
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-      </svg>
-    ),
-  },
-];
+async function getDashboardData() {
+  const totalFeedbacks = await prisma.feedback.count();
 
-const recentFeedback = [
-  { id: 1, text: "Love the new dashboard! It's so much easier to navigate.", category: "Praise", sentiment: "Positive", source: "Email", time: "2 hours ago" },
-  { id: 2, text: "The export feature crashes when selecting more than 100 items.", category: "Bug", sentiment: "Negative", source: "Support", time: "3 hours ago" },
-  { id: 3, text: "Would be great to have dark mode support.", category: "Feature_Request", sentiment: "Neutral", source: "Survey", time: "5 hours ago" },
-  { id: 4, text: "Loading times are too slow on mobile devices.", category: "Performance", sentiment: "Negative", source: "App Store", time: "6 hours ago" },
-  { id: 5, text: "Customer support was incredibly helpful and quick!", category: "Support", sentiment: "Positive", source: "Email", time: "8 hours ago" },
-];
+  const sentimentCounts = await prisma.feedback.groupBy({
+    by: ['sentiment'],
+    _count: true,
+  });
 
-const categoryDistribution = [
-  { name: "Feature Request", count: 245, percentage: 35, color: "bg-indigo-500" },
-  { name: "Bug", count: 89, percentage: 15, color: "bg-red-500" },
-  { name: "Praise", count: 178, percentage: 25, color: "bg-emerald-500" },
-  { name: "UI/UX", count: 67, percentage: 10, color: "bg-amber-500" },
-  { name: "Other", count: 95, percentage: 15, color: "bg-zinc-500" },
-];
+  const categoryCounts = await prisma.feedback.groupBy({
+    by: ['primary_category'],
+    _count: true,
+  });
+
+  const recentFeedback = await prisma.feedback.findMany({
+    take: 5,
+    orderBy: { createdAt: "desc" },
+  });
+
+  const positiveCount = sentimentCounts.find(s => s.sentiment === "Positive")?._count || 0;
+  const positivePercentage = totalFeedbacks > 0 ? Math.round((positiveCount / totalFeedbacks) * 100) : 0;
+
+  const featureRequestCount = categoryCounts.find(c => c.primary_category === "Feature_Request")?._count || 0;
+  const bugCount = categoryCounts.find(c => c.primary_category === "Bug")?._count || 0;
+
+  return {
+    totalFeedbacks,
+    positivePercentage,
+    featureRequestCount,
+    bugCount,
+    recentFeedback,
+    categoryCounts,
+  };
+}
+
+function getStats(data: { totalFeedbacks: number; positivePercentage: number; featureRequestCount: number; bugCount: number }) {
+  return [
+    {
+      label: "Total Feedbacks",
+      value: data.totalFeedbacks.toLocaleString(),
+      change: "+12%",
+      changeType: "positive",
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+        </svg>
+      ),
+    },
+    {
+      label: "Positive Sentiment",
+      value: `${data.positivePercentage}%`,
+      change: "+5%",
+      changeType: "positive",
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+    },
+    {
+      label: "Feature Requests",
+      value: data.featureRequestCount.toLocaleString(),
+      change: "+18%",
+      changeType: "positive",
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        </svg>
+      ),
+    },
+    {
+      label: "Bug Reports",
+      value: data.bugCount.toLocaleString(),
+      change: "-23%",
+      changeType: "negative",
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      ),
+    },
+  ];
+}
+
+function timeAgo(date: Date) {
+  const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+  const hours = Math.floor(seconds / 3600);
+  if (hours < 24) return `${hours} hours ago`;
+  return `${Math.floor(hours / 24)} days ago`;
+}
 
 function getSentimentBadge(sentiment: string) {
   switch (sentiment) {
@@ -100,6 +126,32 @@ function getCategoryBadge(category: string) {
 export default async function Dashboard() {
   const session = await getServerSession();
   if (!session) redirect("/signin");
+
+  const { totalFeedbacks, positivePercentage, featureRequestCount, bugCount, recentFeedback, categoryCounts } = await getDashboardData();
+  const stats = getStats({ totalFeedbacks, positivePercentage, featureRequestCount, bugCount });
+
+  // Calculate category distribution dynamically
+  const categoryDistribution = categoryCounts.map(cat => {
+    const percentage = totalFeedbacks > 0 ? Math.round((cat._count / totalFeedbacks) * 100) : 0;
+    const colorMap: Record<string, string> = {
+      Feature_Request: "bg-indigo-500",
+      Bug: "bg-red-500",
+      Praise: "bg-emerald-500",
+      Positive_Feedback: "bg-emerald-500",
+      UI_UX: "bg-amber-500",
+      Performance: "bg-orange-500",
+      Pricing: "bg-purple-500",
+      Support: "bg-blue-500",
+      Other: "bg-zinc-500",
+    };
+    return {
+      name: cat.primary_category.replace("_", " "),
+      count: cat._count,
+      percentage,
+      color: colorMap[cat.primary_category] || "bg-zinc-500",
+    };
+  }).sort((a, b) => b.count - a.count);
+
   return (
     <DashboardLayout>
       <div className="p-8">
@@ -147,9 +199,8 @@ export default async function Dashboard() {
                     <p className="text-3xl font-bold text-zinc-900 dark:text-white mt-2">
                       {stat.value}
                     </p>
-                    <div className={`flex items-center mt-2 text-sm ${
-                      stat.changeType === "positive" ? "text-emerald-600" : "text-red-600"
-                    }`}>
+                    <div className={`flex items-center mt-2 text-sm ${stat.changeType === "positive" ? "text-emerald-600" : "text-red-600"
+                      }`}>
                       <svg className={`w-4 h-4 mr-1 ${stat.changeType === "negative" ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
                       </svg>
@@ -181,12 +232,12 @@ export default async function Dashboard() {
                 {recentFeedback.map((feedback) => (
                   <div key={feedback.id} className="px-6 py-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
                     <p className="text-sm text-zinc-900 dark:text-white line-clamp-2 mb-3">
-                      {feedback.text}
+                      {feedback.feedback_text}
                     </p>
                     <div className="flex flex-wrap items-center gap-2">
-                      {getCategoryBadge(feedback.category)}
+                      {getCategoryBadge(feedback.primary_category)}
                       {getSentimentBadge(feedback.sentiment)}
-                      <span className="text-xs text-zinc-500 ml-auto">{feedback.time}</span>
+                      <span className="text-xs text-zinc-500 ml-auto">{timeAgo(feedback.createdAt)}</span>
                     </div>
                   </div>
                 ))}
@@ -210,7 +261,7 @@ export default async function Dashboard() {
                       <span className="text-zinc-500">{category.count}</span>
                     </div>
                     <div className="h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                      <div 
+                      <div
                         className={`h-full ${category.color} rounded-full transition-all duration-500`}
                         style={{ width: `${category.percentage}%` }}
                       />
