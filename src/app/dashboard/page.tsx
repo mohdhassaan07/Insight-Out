@@ -25,29 +25,98 @@ async function getDashboardData() {
     orderBy: { createdAt: "desc" },
   });
 
+  // This month's feedbacks
+  const now = new Date();
+  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const thisMonthFeedbacks = await prisma.feedback.count({
+    where: {
+      createdAt: {
+        gte: thisMonthStart,
+      },
+    },
+  });
+
+  // Last month's feedbacks
+  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  const lastMonthFeedbacks = await prisma.feedback.count({
+    where: {
+      createdAt: {
+        gte: lastMonthStart,
+        lte: lastMonthEnd,
+      },
+    },
+  });
+  // Calculate month-over-month increment percentage
+  const feedbackIncrementPercent = lastMonthFeedbacks > 0
+    ? Math.round(((thisMonthFeedbacks - lastMonthFeedbacks) / lastMonthFeedbacks) * 100)
+    : (thisMonthFeedbacks > 0 ? 100 : 0);
+
   const positiveCount = sentimentCounts.find(s => s.sentiment === "Positive")?._count || 0;
   const positivePercentage = totalFeedbacks > 0 ? Math.round((positiveCount / totalFeedbacks) * 100) : 0;
 
   const featureRequestCount = categoryCounts.find(c => c.primary_category === "Feature_Request")?._count || 0;
   const bugCount = categoryCounts.find(c => c.primary_category === "Bug")?._count || 0;
 
+  async function getIncrementPercent(sentiment: Sentiment) {
+  const now = new Date();
+  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const thisMonthFeedbacks = await prisma.feedback.count({
+    where: {
+      sentiment : sentiment,
+      createdAt: {
+        gte: thisMonthStart,
+      },
+    },
+  });
+  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+  // Last month's positive feedbacks
+  const lastMonthSentiments = await prisma.feedback.count({
+    where: {
+      sentiment: sentiment,
+      createdAt: {
+        gte: lastMonthStart,
+        lte: lastMonthEnd,
+      },
+    },
+  });
+  const sentimentIncrementPercent = lastMonthSentiments > 0
+    ? Math.round(((thisMonthFeedbacks -lastMonthSentiments) / lastMonthSentiments) * 100)
+    : (thisMonthFeedbacks > 0 ? 100 : 0);
+
+    return sentimentIncrementPercent;
+}
+
   return {
     totalFeedbacks,
+    feedbackIncrementPercent,
     positivePercentage,
     featureRequestCount,
     bugCount,
     recentFeedback,
     categoryCounts,
+    getIncrementPercent,
   };
+
 }
 
-function getStats(data: { totalFeedbacks: number; positivePercentage: number; featureRequestCount: number; bugCount: number }) {
+enum Sentiment {
+  Positive = "Positive",
+  Negative = "Negative",
+  Neutral = "Neutral",
+}
+//function to get month-over-month increment percentage for a given sentiment
+
+
+function getStats(data: { totalFeedbacks: number; feedbackIncrementPercent: number;getIncrementPercent: any; positivePercentage: number; featureRequestCount: number; bugCount: number }) {
+  const incrementSign = data.feedbackIncrementPercent >= 0 ? "+" : "";
   return [
     {
       label: "Total Feedbacks",
       value: data.totalFeedbacks.toLocaleString(),
-      change: "+12%",
-      changeType: "positive",
+      change: `${incrementSign}${data.feedbackIncrementPercent}%`,
+      changeType: data.feedbackIncrementPercent >= 0 ? "positive" : "negative",
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
@@ -57,7 +126,7 @@ function getStats(data: { totalFeedbacks: number; positivePercentage: number; fe
     {
       label: "Positive Sentiment",
       value: `${data.positivePercentage}%`,
-      change: "+5%",
+      change: `+${data.getIncrementPercent(Sentiment.Positive)}%`,
       changeType: "positive",
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,8 +196,8 @@ export default async function Dashboard() {
   const session = await getServerSession();
   if (!session) redirect("/signin");
 
-  const { totalFeedbacks, positivePercentage, featureRequestCount, bugCount, recentFeedback, categoryCounts } = await getDashboardData();
-  const stats = getStats({ totalFeedbacks, positivePercentage, featureRequestCount, bugCount });
+  const { totalFeedbacks, feedbackIncrementPercent, positivePercentage, featureRequestCount, bugCount, recentFeedback, categoryCounts } = await getDashboardData();
+  const stats = getStats({ totalFeedbacks, feedbackIncrementPercent, positivePercentage, featureRequestCount, bugCount });
 
   // Calculate category distribution dynamically
   const categoryDistribution = categoryCounts.map(cat => {
@@ -207,7 +276,7 @@ export default async function Dashboard() {
                       {stat.change} from last month
                     </div>
                   </div>
-                  <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl text-indigo-600 dark:text-indigo-400">
+                  <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl text-indigo-600 dark:text-indigo-400">
                     {stat.icon}
                   </div>
                 </div>
@@ -217,7 +286,7 @@ export default async function Dashboard() {
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Recent Feedback */}
+          {/* Recent Feedback */} 
           <div className="lg:col-span-2">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
