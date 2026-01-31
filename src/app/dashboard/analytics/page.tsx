@@ -2,7 +2,9 @@
 import DashboardLayout from "@/src/components/layout/DashboardLayout";
 import Card, { CardContent, CardHeader } from "@/src/components/ui/Card";
 import { usefeedbackStore } from "@/src/store/feedbackStore";
-import { useEffect } from "react";
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { set } from "zod";
 // Mock data for demonstration
 const sentimentData = [
   { label: "Positive", value: 68, color: "bg-emerald-500" },
@@ -42,12 +44,41 @@ const topKeywords = [
 ];
 
 export default function AnalyticsPage() {
+  const [categoryCounts, setcategoryCounts] = useState<Array<{ primary_category: string; _count: number }>>([]);
   const maxFeedback = Math.max(...monthlyTrends.map((m) => m.feedbacks));
   const totalCategory = categoryData.reduce((acc, c) => acc + c.value, 0);
-  const fetchfeedbacks = usefeedbackStore(state => state.fetchFeedbacks);
+  const totalFeedbacks = usefeedbackStore(state => state.feedbacks.length);
+ 
   useEffect(() => {
-    fetchfeedbacks();
+    async function fetchCategories() {
+      const res = await axios.get('/api/v1/getCategory');
+      setcategoryCounts(res.data.categories);
+      console.log(res.data.categories);
+    }
+    fetchCategories();
   }, []);
+
+   const categoryDistribution = categoryCounts.map(cat => {
+    const percentage = totalFeedbacks > 0 ? Math.round((cat._count / totalFeedbacks) * 100) : 0;
+    const colorMap: Record<string, string> = {
+      Feature_Request: "bg-indigo-500",
+      Bug: "bg-red-500",
+      Praise: "bg-emerald-500",
+      Positive_Feedback: "bg-emerald-500",
+      UI_UX: "bg-amber-500",
+      Performance: "bg-orange-500",
+      Pricing: "bg-purple-500",
+      Support: "bg-blue-500",
+      Other: "bg-zinc-500",
+    };
+    return {
+      name: cat.primary_category.replace("_", " "),
+      count: cat._count,
+      percentage,
+      color: colorMap[cat.primary_category] || "bg-zinc-500",
+    };
+  }).sort((a, b) => b.count - a.count);
+
   const feedbacks = usefeedbackStore(state => state.feedbacks);
   console.log(feedbacks);
   return (
@@ -225,18 +256,18 @@ export default function AnalyticsPage() {
               </h2>
             </CardHeader>
             <CardContent className="space-y-3">
-              {categoryData.map((category) => (
-                <div key={category.label}>
+              {categoryDistribution.map((category, index) => (
+                <div key={index}>
                   <div className="flex items-center justify-between text-sm mb-1">
-                    <span className="text-zinc-700 dark:text-zinc-300">{category.label}</span>
+                    <span className="text-zinc-700 dark:text-zinc-300">{category.name}</span>
                     <span className="text-zinc-500">
-                      {category.value} ({((category.value / totalCategory) * 100).toFixed(0)}%)
+                      {category.count} ({category.percentage}%)
                     </span>
                   </div>
                   <div className="h-2.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                     <div
                       className={`h-full ${category.color} rounded-full transition-all duration-500`}
-                      style={{ width: `${(category.value / totalCategory) * 100}%` }}
+                      style={{ width: `${(category.count / categoryCounts.length) * 100}%` }}
                     />
                   </div>
                 </div>
