@@ -8,45 +8,55 @@ import Link from "next/link";
 import prisma from "@/src/lib/prisma";
 
 async function getDashboardData() {
-  const totalFeedbacks = await prisma.feedback.count();
-
-  const sentimentCounts = await prisma.feedback.groupBy({
-    by: ['sentiment'],
-    _count: true,
-  });
-
-  const categoryCounts = await prisma.feedback.groupBy({
-    by: ['primary_category'],
-    _count: true,
-  });
-
-  const recentFeedback = await prisma.feedback.findMany({
-    take: 5,
-    orderBy: { createdAt: "desc" },
-  });
-
-  // This month's feedbacks
   const now = new Date();
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const thisMonthFeedbacks = await prisma.feedback.count({
-    where: {
-      createdAt: {
-        gte: thisMonthStart,
-      },
-    },
-  });
-
-  // Last month's feedbacks
   const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
-  const lastMonthFeedbacks = await prisma.feedback.count({
-    where: {
-      createdAt: {
-        gte: lastMonthStart,
-        lte: lastMonthEnd,
-      },
-    },
-  });
+
+  // Run all independent queries in parallel
+  const [
+    totalFeedbacks,
+    sentimentCounts,
+    categoryCounts,
+    recentFeedback,
+    thisMonthFeedbacks,
+    lastMonthFeedbacks,
+    thisMonthSentimentCounts,
+    lastMonthSentimentCounts,
+  ] = await Promise.all([
+    prisma.feedback.count(),
+    prisma.feedback.groupBy({
+      by: ['sentiment'],
+      _count: true,
+    }),
+    prisma.feedback.groupBy({
+      by: ['primary_category'],
+      _count: true,
+    }),
+    prisma.feedback.findMany({
+      take: 5,
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.feedback.count({
+      where: { createdAt: { gte: thisMonthStart } },
+    }),
+    prisma.feedback.count({
+      where: { createdAt: { gte: lastMonthStart, lte: lastMonthEnd } },
+    }),
+    // Get this month's sentiment counts in one query
+    prisma.feedback.groupBy({
+      by: ['sentiment'],
+      where: { createdAt: { gte: thisMonthStart } },
+      _count: true,
+    }),
+    // Get last month's sentiment counts in one query
+    prisma.feedback.groupBy({
+      by: ['sentiment'],
+      where: { createdAt: { gte: lastMonthStart, lte: lastMonthEnd } },
+      _count: true,
+    }),
+  ]);
+
   // Calculate month-over-month increment percentage
   const feedbackIncrementPercent = lastMonthFeedbacks > 0
     ? Math.round(((thisMonthFeedbacks - lastMonthFeedbacks) / lastMonthFeedbacks) * 100)
@@ -58,58 +68,34 @@ async function getDashboardData() {
   const featureRequestCount = categoryCounts.find(c => c.primary_category === "Feature_Request")?._count || 0;
   const bugCount = categoryCounts.find(c => c.primary_category === "Bug")?._count || 0;
 
-  async function getIncrementPercent(sentiment: Sentiment) {
-  const now = new Date();
-  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const thisMonthFeedbacks = await prisma.feedback.count({
-    where: {
-      sentiment : sentiment,
-      createdAt: {
-        gte: thisMonthStart,
-      },
-    },
-  });
-  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
-  // Last month's positive feedbacks
-  const lastMonthSentiments = await prisma.feedback.count({
-    where: {
-      sentiment: sentiment,
-      createdAt: {
-        gte: lastMonthStart,
-        lte: lastMonthEnd,
-      },
-    },
-  });
-  const sentimentIncrementPercent = lastMonthSentiments > 0
-    ? Math.round(((thisMonthFeedbacks -lastMonthSentiments) / lastMonthSentiments) * 100)
-    : (thisMonthFeedbacks > 0 ? 100 : 0);
+  // Calculate sentiment increment percentages from pre-fetched data
+  function getIncrementPercent(sentiment: string) {
+    const thisMonthCount = thisMonthSentimentCounts.find(s => s.sentiment === sentiment)?._count || 0;
+    const lastMonthCount = lastMonthSentimentCounts.find(s => s.sentiment === sentiment)?._count || 0;
+    return lastMonthCount > 0
+      ? Math.round(((thisMonthCount - lastMonthCount) / lastMonthCount) * 100)
+      : (thisMonthCount > 0 ? 100 : 0);
+  }
 
-    return sentimentIncrementPercent;
-}
+  const positiveIncrementPercent = getIncrementPercent("Positive");
+  const negativeIncrementPercent = getIncrementPercent("Negative");
+  const neutralIncrementPercent = getIncrementPercent("Neutral");
 
   return {
     totalFeedbacks,
     feedbackIncrementPercent,
     positivePercentage,
+    positiveIncrementPercent,
+    negativeIncrementPercent,
+    neutralIncrementPercent,
     featureRequestCount,
     bugCount,
     recentFeedback,
     categoryCounts,
-    getIncrementPercent,
   };
-
 }
 
-enum Sentiment {
-  Positive = "Positive",
-  Negative = "Negative",
-  Neutral = "Neutral",
-}
-//function to get month-over-month increment percentage for a given sentiment
-
-
-function getStats(data: { totalFeedbacks: number; feedbackIncrementPercent: number;getIncrementPercent: any; positivePercentage: number; featureRequestCount: number; bugCount: number }) {
+function getStats(data: { totalFeedbacks: number; feedbackIncrementPercent: number; positivePercentage: number; positiveIncrementPercent: number; featureRequestCount: number; bugCount: number }) {
   const incrementSign = data.feedbackIncrementPercent >= 0 ? "+" : "";
   return [
     {
@@ -126,8 +112,8 @@ function getStats(data: { totalFeedbacks: number; feedbackIncrementPercent: numb
     {
       label: "Positive Sentiment",
       value: `${data.positivePercentage}%`,
-      change: `+${data.getIncrementPercent(Sentiment.Positive)}%`,
-      changeType: "positive",
+      change: `${data.positiveIncrementPercent >= 0 ? "+" : ""}${data.positiveIncrementPercent}%`,
+      changeType: data.positiveIncrementPercent >= 0 ? "positive" : "negative",
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -196,8 +182,8 @@ export default async function Dashboard() {
   const session = await getServerSession();
   if (!session) redirect("/signin");
 
-  const { totalFeedbacks, feedbackIncrementPercent, positivePercentage, featureRequestCount, bugCount, recentFeedback, categoryCounts } = await getDashboardData();
-  const stats = getStats({ totalFeedbacks, feedbackIncrementPercent, positivePercentage, featureRequestCount, bugCount });
+  const { totalFeedbacks, feedbackIncrementPercent, positivePercentage, positiveIncrementPercent, featureRequestCount, bugCount, recentFeedback, categoryCounts } = await getDashboardData();
+  const stats = getStats({ totalFeedbacks, feedbackIncrementPercent, positivePercentage, positiveIncrementPercent, featureRequestCount, bugCount });
 
   // Calculate category distribution dynamically
   const categoryDistribution = categoryCounts.map(cat => {

@@ -1,7 +1,8 @@
 "use client";
 import DashboardLayout from "@/src/components/layout/DashboardLayout";
 import Card, { CardContent, CardHeader } from "@/src/components/ui/Card";
-
+import { usefeedbackStore } from "@/src/store/feedbackStore";
+import { useEffect } from "react";
 // Mock data for demonstration
 const sentimentData = [
   { label: "Positive", value: 68, color: "bg-emerald-500" },
@@ -43,7 +44,12 @@ const topKeywords = [
 export default function AnalyticsPage() {
   const maxFeedback = Math.max(...monthlyTrends.map((m) => m.feedbacks));
   const totalCategory = categoryData.reduce((acc, c) => acc + c.value, 0);
-
+  const fetchfeedbacks = usefeedbackStore(state => state.fetchFeedbacks);
+  useEffect(() => {
+    fetchfeedbacks();
+  }, []);
+  const feedbacks = usefeedbackStore(state => state.feedbacks);
+  console.log(feedbacks);
   return (
     <DashboardLayout>
       <div className="p-8">
@@ -133,24 +139,24 @@ export default function AnalyticsPage() {
                   <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                     <circle cx="50" cy="50" r="40" fill="none" stroke="#f4f4f5" strokeWidth="12" className="dark:stroke-zinc-800" />
                     {/* Positive */}
-                    <circle 
-                      cx="50" cy="50" r="40" fill="none" 
+                    <circle
+                      cx="50" cy="50" r="40" fill="none"
                       stroke="#10b981" strokeWidth="12"
                       strokeDasharray={`${68 * 2.51} ${100 * 2.51}`}
                       strokeDashoffset="0"
                     />
                     {/* Neutral */}
-                    <circle 
-                      cx="50" cy="50" r="40" fill="none" 
+                    <circle
+                      cx="50" cy="50" r="40" fill="none"
                       stroke="#a1a1aa" strokeWidth="12"
                       strokeDasharray={`${20 * 2.51} ${100 * 2.51}`}
                       strokeDashoffset={`${-68 * 2.51}`}
                     />
                     {/* Negative */}
-                    <circle 
-                      cx="50" cy="50" r="40" fill="none" 
+                    <circle
+                      cx="50" cy="50" r="40" fill="none"
                       stroke="#ef4444" strokeWidth="12"
-                      strokeDasharray={`${12 * 2.51} ${100 * 2.51}`}
+                      strokeDasharray={`${50 * 2.51} ${100 * 2.51}`}
                       strokeDashoffset={`${-88 * 2.51}`}
                     />
                   </svg>
@@ -185,7 +191,7 @@ export default function AnalyticsPage() {
                 {monthlyTrends.map((month) => (
                   <div key={month.month} className="flex-1 flex flex-col items-center gap-2">
                     <div className="w-full flex flex-col gap-1">
-                      <div 
+                      <div
                         className="w-full bg-linear-to-t from-indigo-600 to-purple-600 rounded-t-sm transition-all duration-500"
                         style={{ height: `${(month.feedbacks / maxFeedback) * 150}px` }}
                       />
@@ -228,7 +234,7 @@ export default function AnalyticsPage() {
                     </span>
                   </div>
                   <div className="h-2.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                    <div 
+                    <div
                       className={`h-full ${category.color} rounded-full transition-all duration-500`}
                       style={{ width: `${(category.value / totalCategory) * 100}%` }}
                     />
@@ -248,15 +254,15 @@ export default function AnalyticsPage() {
             <CardContent>
               <div className="flex flex-wrap gap-2">
                 {topKeywords.map((keyword) => (
-                  <div 
+                  <div
                     key={keyword.word}
                     className={`
                       px-3 py-1.5 rounded-full text-sm font-medium
-                      ${keyword.sentiment === "positive" 
-                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" 
+                      ${keyword.sentiment === "positive"
+                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
                         : keyword.sentiment === "negative"
-                        ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                        : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                          ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                          : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
                       }
                     `}
                   >
