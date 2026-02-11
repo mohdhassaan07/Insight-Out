@@ -8,15 +8,12 @@ import Link from "next/link";
 import prisma from "@/src/lib/prisma";
 import { authOptions } from "@/src/lib/auth";
 
-const session = await getServerSession(authOptions);
-
-async function getDashboardData() {
-
+async function getDashboardData(organizationId: string) {
   const now = new Date();
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  //last month feedbacks
   const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+
   const [
     totalFeedbacks,
     sentimentCounts,
@@ -28,56 +25,49 @@ async function getDashboardData() {
     lastMonthSentimentCounts,
   ] = await Promise.all([
     prisma.feedback.count({
-      where: {
-        organizationId: session?.user.organizationId
-      },
+      where: { organizationId },
     }),
     prisma.feedback.groupBy({
-      where: {
-        organizationId: session?.user.organizationId
-      },
+      where: { organizationId },
       by: ['sentiment'],
       _count: true,
     }),
     prisma.feedback.groupBy({
-      where: {
-        organizationId: session?.user.organizationId
-      },
+      where: { organizationId },
       by: ['primary_category'],
       _count: true,
     }),
     prisma.feedback.findMany({
-      where: {
-        organizationId: session?.user.organizationId
-      },
-      take: 5,
+      where: { organizationId },
+      take: 7,
       orderBy: { createdAt: "desc" },
     }),
     prisma.feedback.count({
       where: {
-        organizationId: session?.user.organizationId,
+        organizationId,
         createdAt: { gte: thisMonthStart }
       },
     }),
     prisma.feedback.count({
       where: { 
-        organizationId: session?.user.organizationId,
-        createdAt: { gte: lastMonthStart, lte: lastMonthEnd } },
+        organizationId,
+        createdAt: { gte: lastMonthStart, lte: lastMonthEnd }
+      },
     }),
-    // Get this month's sentiment counts in one query
     prisma.feedback.groupBy({
       by: ['sentiment'],
       where: { 
-        organizationId: session?.user.organizationId,
-        createdAt: { gte: thisMonthStart } },
+        organizationId,
+        createdAt: { gte: thisMonthStart }
+      },
       _count: true,
     }),
-    // Get last month's sentiment counts in one query
     prisma.feedback.groupBy({
       by: ['sentiment'],
       where: { 
-        organizationId: session?.user.organizationId,
-        createdAt: { gte: lastMonthStart, lte: lastMonthEnd } },
+        organizationId,
+        createdAt: { gte: lastMonthStart, lte: lastMonthEnd }
+      },
       _count: true,
     }),
   ]);
@@ -92,20 +82,18 @@ async function getDashboardData() {
   const featureRequestCount = categoryCounts.find(c => c.primary_category === "Feature_Request")?._count || 0;
   const bugCount = categoryCounts.find(c => c.primary_category === "Bug")?._count || 0;
 
-  async function getIncrementPercent(sentiment: any) {
+  // Calculate sentiment increment percentages synchronously from pre-fetched data
+  function getIncrementPercent(sentiment: string) {
     const thisMonthCount = thisMonthSentimentCounts.find(s => s.sentiment === sentiment)?._count || 0;
-
     const lastMonthCount = lastMonthSentimentCounts.find(s => s.sentiment === sentiment)?._count || 0;
-  
     return lastMonthCount > 0
       ? Math.round(((thisMonthCount - lastMonthCount) / lastMonthCount) * 100)
       : (thisMonthCount > 0 ? 100 : 0);
   }
 
-  // Pre-calculate sentiment increment percentages
-  const positiveIncrementPercent = await getIncrementPercent("Positive");
-  const negativeIncrementPercent = await getIncrementPercent("Negative");
-  const neutralIncrementPercent = await getIncrementPercent("Neutral");
+  const positiveIncrementPercent = getIncrementPercent("Positive");
+  const negativeIncrementPercent = getIncrementPercent("Negative");
+  const neutralIncrementPercent = getIncrementPercent("Neutral");
 
   return {
     totalFeedbacks,
@@ -207,9 +195,10 @@ function getCategoryBadge(category: string) {
 
 
 export default async function Dashboard() {
+  const session = await getServerSession(authOptions);
   if (!session) redirect("/signin");
 
-  const { totalFeedbacks, feedbackIncrementPercent, positivePercentage, positiveIncrementPercent, featureRequestCount, bugCount, recentFeedback, categoryCounts } = await getDashboardData();
+  const { totalFeedbacks, feedbackIncrementPercent, positivePercentage, positiveIncrementPercent, featureRequestCount, bugCount, recentFeedback, categoryCounts } = await getDashboardData(session.user.organizationId);
   const stats = getStats({ totalFeedbacks, feedbackIncrementPercent, positivePercentage, positiveIncrementPercent, featureRequestCount, bugCount });
 
   // Calculate category distribution dynamically
@@ -304,7 +293,7 @@ export default async function Dashboard() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
-                  Recent Feedback
+                  Recent Feedbacks
                 </h2>
                 <Link href="/dashboard/feedbacks" className="text-sm text-indigo-600 hover:text-indigo-500 font-medium">
                   View all →
