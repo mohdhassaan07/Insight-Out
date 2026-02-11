@@ -9,62 +9,79 @@ import prisma from "@/src/lib/prisma";
 import { authOptions } from "@/src/lib/auth";
 
 const session = await getServerSession(authOptions);
+
 async function getDashboardData() {
-  const totalFeedbacks = await prisma.feedback.count({
-    where : {
-      organizationId : session?.user.organizationId
-    },
-  });
 
-  const sentimentCounts = await prisma.feedback.groupBy({
-    where : {
-      organizationId : session?.user.organizationId
-    },
-    by: ['sentiment'],
-    _count: true,
-  });
-
-  const categoryCounts = await prisma.feedback.groupBy({
-    where : {
-      organizationId : session?.user.organizationId
-    },
-    by: ['primary_category'],
-    _count: true,
-  });
-
-  const recentFeedback = await prisma.feedback.findMany({
-    where : {
-      organizationId : session?.user.organizationId
-    },
-    take: 5,
-    orderBy: { createdAt: "desc" },
-  });
-
-  // This month's feedbacks
   const now = new Date();
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const thisMonthFeedbacks = await prisma.feedback.count({
-    where: {
-      organizationId : session?.user.organizationId,
-      createdAt: {
-        gte: thisMonthStart,
-      },
-    },
-  });
-
-  // Last month's feedbacks
+  //last month feedbacks
   const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
-  const lastMonthFeedbacks = await prisma.feedback.count({
-    where: {
-      organizationId : session?.user.organizationId,
-      createdAt: {
-        gte: lastMonthStart,
-        lte: lastMonthEnd,
+  const [
+    totalFeedbacks,
+    sentimentCounts,
+    categoryCounts,
+    recentFeedback,
+    thisMonthFeedbacks,
+    lastMonthFeedbacks,
+    thisMonthSentimentCounts,
+    lastMonthSentimentCounts,
+  ] = await Promise.all([
+    prisma.feedback.count({
+      where: {
+        organizationId: session?.user.organizationId
       },
-    },
-  });
-  // Calculate month-over-month increment percentage
+    }),
+    prisma.feedback.groupBy({
+      where: {
+        organizationId: session?.user.organizationId
+      },
+      by: ['sentiment'],
+      _count: true,
+    }),
+    prisma.feedback.groupBy({
+      where: {
+        organizationId: session?.user.organizationId
+      },
+      by: ['primary_category'],
+      _count: true,
+    }),
+    prisma.feedback.findMany({
+      where: {
+        organizationId: session?.user.organizationId
+      },
+      take: 5,
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.feedback.count({
+      where: {
+        organizationId: session?.user.organizationId,
+        createdAt: { gte: thisMonthStart }
+      },
+    }),
+    prisma.feedback.count({
+      where: { 
+        organizationId: session?.user.organizationId,
+        createdAt: { gte: lastMonthStart, lte: lastMonthEnd } },
+    }),
+    // Get this month's sentiment counts in one query
+    prisma.feedback.groupBy({
+      by: ['sentiment'],
+      where: { 
+        organizationId: session?.user.organizationId,
+        createdAt: { gte: thisMonthStart } },
+      _count: true,
+    }),
+    // Get last month's sentiment counts in one query
+    prisma.feedback.groupBy({
+      by: ['sentiment'],
+      where: { 
+        organizationId: session?.user.organizationId,
+        createdAt: { gte: lastMonthStart, lte: lastMonthEnd } },
+      _count: true,
+    }),
+  ]);
+  
   const feedbackIncrementPercent = lastMonthFeedbacks > 0
     ? Math.round(((thisMonthFeedbacks - lastMonthFeedbacks) / lastMonthFeedbacks) * 100)
     : (thisMonthFeedbacks > 0 ? 100 : 0);
@@ -76,30 +93,15 @@ async function getDashboardData() {
   const bugCount = categoryCounts.find(c => c.primary_category === "Bug")?._count || 0;
 
   async function getIncrementPercent(sentiment: any) {
-    const thisMonthCount = await prisma.feedback.count({
-      where: {
-        organizationId : session?.user.organizationId,
-        sentiment: sentiment,
-        createdAt: {
-          gte: thisMonthStart,
-        },
-      },
-    });
-    const lastMonthCount = await prisma.feedback.count({
-      where: {
-        organizationId : session?.user.organizationId,
-        sentiment: sentiment,
-        createdAt: {
-          gte: lastMonthStart,
-          lte: lastMonthEnd,
-        },
-      },
-    });
+    const thisMonthCount = thisMonthSentimentCounts.find(s => s.sentiment === sentiment)?._count || 0;
+
+    const lastMonthCount = lastMonthSentimentCounts.find(s => s.sentiment === sentiment)?._count || 0;
+  
     return lastMonthCount > 0
       ? Math.round(((thisMonthCount - lastMonthCount) / lastMonthCount) * 100)
       : (thisMonthCount > 0 ? 100 : 0);
   }
-  
+
   // Pre-calculate sentiment increment percentages
   const positiveIncrementPercent = await getIncrementPercent("Positive");
   const negativeIncrementPercent = await getIncrementPercent("Negative");
@@ -297,7 +299,7 @@ export default async function Dashboard() {
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* Recent Feedback */} 
+          {/* Recent Feedback */}
           <div className="lg:col-span-2">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">

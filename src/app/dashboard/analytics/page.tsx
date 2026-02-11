@@ -4,8 +4,7 @@ import Card, { CardContent, CardHeader } from "@/src/components/ui/Card";
 import { usefeedbackStore } from "@/src/store/feedbackStore";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { set } from "zod";
-// Mock data for demonstration
+
 const sentimentData = [
   { label: "Positive", value: 68, color: "bg-emerald-500" },
   { label: "Neutral", value: 20, color: "bg-zinc-400" },
@@ -48,13 +47,14 @@ export default function AnalyticsPage() {
   const maxFeedback = Math.max(...monthlyTrends.map((m) => m.feedbacks));
   const totalCategory = categoryData.reduce((acc, c) => acc + c.value, 0);
   const totalFeedbacks = usefeedbackStore(state => state.feedbacks.length);
- 
+  const fetchFeedbacks = usefeedbackStore(state => state.fetchFeedbacks);
   useEffect(() => {
     async function fetchCategories() {
       const res = await axios.get('/api/v1/getCategory');
       setcategoryCounts(res.data.categories);
       console.log(res.data.categories);
     }
+    fetchFeedbacks();
     fetchCategories();
   }, []);
 
@@ -267,7 +267,7 @@ export default function AnalyticsPage() {
                   <div className="h-2.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                     <div
                       className={`h-full ${category.color} rounded-full transition-all duration-500`}
-                      style={{ width: `${(category.count / categoryCounts.length) * 100}%` }}
+                      style={{ width: `${category.percentage}%` }}
                     />
                   </div>
                 </div>
