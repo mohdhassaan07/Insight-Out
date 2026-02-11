@@ -44,7 +44,7 @@ export function LoadingCard() {
 export function LoadingSkeleton({ className = "" }: { className?: string }) {
   return (
     <div
-      className={`animate-pulse bg-zinc-200 dark:bg-zinc-700 rounded ${className}`}
+      className={`animate-pulse bg-zinc-200 dark:bg-zinc-400 rounded ${className}`}
     />
   );
 }

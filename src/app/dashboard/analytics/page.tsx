@@ -1,15 +1,10 @@
 "use client";
 import DashboardLayout from "@/src/components/layout/DashboardLayout";
 import Card, { CardContent, CardHeader } from "@/src/components/ui/Card";
+import { LoadingCard } from "@/src/components/ui/Loading";
 import { usefeedbackStore } from "@/src/store/feedbackStore";
 import axios from "axios";
 import { useEffect, useState } from "react";
-
-const sentimentData = [
-  { label: "Positive", value: 68, color: "bg-emerald-500" },
-  { label: "Neutral", value: 20, color: "bg-zinc-400" },
-  { label: "Negative", value: 12, color: "bg-red-500" },
-];
 
 const categoryData = [
   { label: "Feature Request", value: 245, color: "bg-indigo-500" },
@@ -29,6 +24,7 @@ const monthlyTrends = [
   { month: "Nov", feedbacks: 210, positive: 145, negative: 22 },
   { month: "Dec", feedbacks: 195, positive: 130, negative: 28 },
   { month: "Jan", feedbacks: 234, positive: 160, negative: 18 },
+
 ];
 
 const topKeywords = [
@@ -42,12 +38,15 @@ const topKeywords = [
   { word: "helpful", count: 134, sentiment: "positive" },
 ];
 
+
+
 export default function AnalyticsPage() {
   const [categoryCounts, setcategoryCounts] = useState<Array<{ primary_category: string; _count: number }>>([]);
   const maxFeedback = Math.max(...monthlyTrends.map((m) => m.feedbacks));
   const totalCategory = categoryData.reduce((acc, c) => acc + c.value, 0);
   const totalFeedbacks = usefeedbackStore(state => state.feedbacks.length);
   const fetchFeedbacks = usefeedbackStore(state => state.fetchFeedbacks);
+  const loading = usefeedbackStore(state => state.loading);
   useEffect(() => {
     async function fetchCategories() {
       const res = await axios.get('/api/v1/getCategory');
@@ -57,8 +56,74 @@ export default function AnalyticsPage() {
     fetchFeedbacks();
     fetchCategories();
   }, []);
+  const feedbacks = usefeedbackStore(state => state.feedbacks);
+  console.log(feedbacks);
 
-   const categoryDistribution = categoryCounts.map(cat => {
+  function thisMonthFeedbackCount() {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const thismonth = feedbacks.filter((feedback) => {
+      const createdAt = new Date(feedback.createdAt);
+      return createdAt.getMonth() === currentMonth && createdAt.getFullYear() === currentYear;
+    })
+    return thismonth.length;
+  }
+
+  // Calculate sentiment data from actual feedbacks
+  const sentimentCounts = {
+    Positive: feedbacks.filter(f => f.sentiment === "Positive").length,
+    Neutral: feedbacks.filter(f => f.sentiment === "Neutral").length,
+    Negative: feedbacks.filter(f => f.sentiment === "Negative").length,
+  };
+
+  const sentimentData = [
+    {
+      label: "Positive",
+      value: totalFeedbacks > 0 ? Math.round((sentimentCounts.Positive / totalFeedbacks) * 100) : 0,
+      count: sentimentCounts.Positive,
+      color: "bg-emerald-500",
+      stroke: "#10b981"
+    },
+    {
+      label: "Neutral",
+      value: totalFeedbacks > 0 ? Math.round((sentimentCounts.Neutral / totalFeedbacks) * 100) : 0,
+      count: sentimentCounts.Neutral,
+      color: "bg-zinc-400",
+      stroke: "#a1a1aa"
+    },
+    {
+      label: "Negative",
+      value: totalFeedbacks > 0 ? Math.round((sentimentCounts.Negative / totalFeedbacks) * 100) : 0,
+      count: sentimentCounts.Negative,
+      color: "bg-red-500",
+      stroke: "#ef4444"
+    },
+  ];
+
+  function highestSentimentRate() {
+    const positiveRate = sentimentData[0].value;
+    const neutralRate = sentimentData[1].value;
+    const negativeRate = sentimentData[2].value;
+    if (positiveRate >= neutralRate && positiveRate >= negativeRate) {
+      return {
+        value: positiveRate,
+        label: "Positive"
+      };
+    }
+    if (neutralRate >= positiveRate && neutralRate >= negativeRate) {
+      return {
+        value: neutralRate,
+        label: "Neutral"
+      }
+    }
+    else return {
+      value: negativeRate,
+      label: "Negative"
+    }
+  }
+
+  const categoryDistribution = categoryCounts.map(cat => {
     const percentage = totalFeedbacks > 0 ? Math.round((cat._count / totalFeedbacks) * 100) : 0;
     const colorMap: Record<string, string> = {
       Feature_Request: "bg-indigo-500",
@@ -79,8 +144,7 @@ export default function AnalyticsPage() {
     };
   }).sort((a, b) => b.count - a.count);
 
-  const feedbacks = usefeedbackStore(state => state.feedbacks);
-  console.log(feedbacks);
+
   return (
     <DashboardLayout>
       <div className="p-8">
@@ -101,10 +165,10 @@ export default function AnalyticsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                    Average Confidence
+                    Total Feedbacks
                   </p>
                   <p className="text-3xl font-bold text-zinc-900 dark:text-white mt-2">
-                    92.3%
+                    {feedbacks.length}
                   </p>
                 </div>
                 <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl text-emerald-600">
@@ -123,7 +187,7 @@ export default function AnalyticsPage() {
                     Feedbacks This Month
                   </p>
                   <p className="text-3xl font-bold text-zinc-900 dark:text-white mt-2">
-                    234
+                    {thisMonthFeedbackCount()}
                   </p>
                 </div>
                 <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl text-indigo-600">
@@ -139,11 +203,24 @@ export default function AnalyticsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-                    Response Rate
+                    Highest Sentiment Rate
                   </p>
-                  <p className="text-3xl font-bold text-zinc-900 dark:text-white mt-2">
-                    78%
-                  </p>
+                  {highestSentimentRate().label == "Positive" && (
+                    <p className="text-3xl font-bold text-green-900 dark:text-green-600 mt-2">
+                      {highestSentimentRate().value}% <span className="text-xl font-thin">positive</span>
+                    </p>
+                  )}
+                  {highestSentimentRate().label == "Neutral" && (
+                    <p className="text-3xl font-bold text-gray-700 dark:text-gray-500 mt-2">
+                      {highestSentimentRate().value}% <span className="text-xl font-thin">neutral</span>
+                    </p>
+                  )}
+                  {highestSentimentRate().label == "Negative" && (
+                    <p className="text-3xl font-bold text-red-900 dark:text-red-600 mt-2">
+                      {highestSentimentRate().value}% <span className="text-xl font-thin">negative</span>
+                    </p>
+                  )}
+
                 </div>
                 <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl text-purple-600">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -172,27 +249,27 @@ export default function AnalyticsPage() {
                     {/* Positive */}
                     <circle
                       cx="50" cy="50" r="40" fill="none"
-                      stroke="#10b981" strokeWidth="12"
-                      strokeDasharray={`${68 * 2.51} ${100 * 2.51}`}
+                      stroke={sentimentData[0].stroke} strokeWidth="12"
+                      strokeDasharray={`${sentimentData[0].value * 2.51} ${100 * 2.51}`}
                       strokeDashoffset="0"
                     />
                     {/* Neutral */}
                     <circle
                       cx="50" cy="50" r="40" fill="none"
-                      stroke="#a1a1aa" strokeWidth="12"
-                      strokeDasharray={`${20 * 2.51} ${100 * 2.51}`}
-                      strokeDashoffset={`${-68 * 2.51}`}
+                      stroke={sentimentData[1].stroke} strokeWidth="12"
+                      strokeDasharray={`${sentimentData[1].value * 2.51} ${100 * 2.51}`}
+                      strokeDashoffset={`${-sentimentData[0].value * 2.51}`}
                     />
                     {/* Negative */}
                     <circle
                       cx="50" cy="50" r="40" fill="none"
-                      stroke="#ef4444" strokeWidth="12"
-                      strokeDasharray={`${50 * 2.51} ${100 * 2.51}`}
-                      strokeDashoffset={`${-88 * 2.51}`}
+                      stroke={sentimentData[2].stroke} strokeWidth="12"
+                      strokeDasharray={`${sentimentData[2].value * 2.51} ${100 * 2.51}`}
+                      strokeDashoffset={`${-(sentimentData[0].value + sentimentData[1].value) * 2.51}`}
                     />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center flex-col">
-                    <p className="text-3xl font-bold text-zinc-900 dark:text-white">68%</p>
+                    <p className="text-3xl font-bold text-zinc-900 dark:text-white">{sentimentData[0].value}%</p>
                     <p className="text-sm text-zinc-500">Positive</p>
                   </div>
                 </div>
@@ -256,22 +333,27 @@ export default function AnalyticsPage() {
               </h2>
             </CardHeader>
             <CardContent className="space-y-3">
-              {categoryDistribution.map((category, index) => (
-                <div key={index}>
-                  <div className="flex items-center justify-between text-sm mb-1">
-                    <span className="text-zinc-700 dark:text-zinc-300">{category.name}</span>
-                    <span className="text-zinc-500">
-                      {category.count} ({category.percentage}%)
-                    </span>
+              {loading ? (
+                <LoadingCard />
+              ) : (
+                categoryDistribution.map((category, index) => (
+                  <div key={index}>
+                    <div className="flex items-center justify-between text-sm mb-1">
+                      <span className="text-zinc-700 dark:text-zinc-300">{category.name}</span>
+                      <span className="text-zinc-500">
+                        {category.count} ({category.percentage}%)
+                      </span>
+                    </div>
+                    <div className="h-2.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full ${category.color} rounded-full transition-all duration-500`}
+                        style={{ width: `${category.percentage}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="h-2.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full ${category.color} rounded-full transition-all duration-500`}
-                      style={{ width: `${category.percentage}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
+
             </CardContent>
           </Card>
 

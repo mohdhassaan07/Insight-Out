@@ -135,7 +135,7 @@ export async function POST(req: Request) {
             )
             .map((row) => ({
                 feedback: preprocessFeedback(row.feedback),
-                source: row.source
+                source: row.source ? row.source : "unknown" // default source if not provided
             }));
 
         const batches = arrayChunks(rows, 10);
