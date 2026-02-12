@@ -12,13 +12,6 @@ import { FeedbackSkeleton, LoadingCard } from "@/src/components/ui/Loading";
 
 const mockFeedbacks = [
   { id: "1", feedback_text: "Love the new dashboard! It's so much easier to navigate and find what I need.", primary_category: "Praise", sentiment: "Positive", confidence: 0.95, source: "Email", status: "auto_approved", createdAt: "2026-01-23T10:30:00Z" },
-  { id: "2", text: "The export feature crashes when selecting more than 100 items. Please fix this ASAP.", category: "Bug", sentiment: "Negative", confidence: 0.89, source: "Support", status: "auto_approved", createdAt: "2026-01-23T09:15:00Z" },
-  { id: "3", text: "Would be great to have dark mode support for the mobile app.", category: "Feature_Request", sentiment: "Neutral", confidence: 0.92, source: "Survey", status: "auto_approved", createdAt: "2026-01-23T08:45:00Z" },
-  { id: "4", text: "Loading times are too slow on mobile devices. Takes 5+ seconds to load.", category: "Performance", sentiment: "Negative", confidence: 0.87, source: "App Store", status: "auto_approved", createdAt: "2026-01-22T16:20:00Z" },
-  { id: "5", text: "Customer support was incredibly helpful and quick to resolve my issue!", category: "Support", sentiment: "Positive", confidence: 0.94, source: "Email", status: "auto_approved", createdAt: "2026-01-22T14:00:00Z" },
-  { id: "6", text: "The new pricing tier is too expensive for small businesses like ours.", category: "Pricing", sentiment: "Negative", confidence: 0.88, source: "Survey", status: "auto_approved", createdAt: "2026-01-22T11:30:00Z" },
-  { id: "7", text: "The button placement in the header is confusing. Had trouble finding settings.", category: "UI_UX", sentiment: "Negative", confidence: 0.85, source: "Feedback Form", status: "auto_approved", createdAt: "2026-01-22T09:45:00Z" },
-  { id: "8", text: "Overall a solid product. Meets most of our needs.", category: "Positive_Feedback", sentiment: "Positive", confidence: 0.82, source: "Survey", status: "auto_approved", createdAt: "2026-01-21T15:00:00Z" },
 ];
 
 const categories = ["All", "Bug", "Feature_Request", "Performance", "UI_UX", "Positive_Feedback", "Pricing", "Support", "Praise", "Other"];

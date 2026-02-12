@@ -17,16 +17,6 @@ const categoryData = [
   { label: "Other", value: 95, color: "bg-zinc-500" },
 ];
 
-const monthlyTrends = [
-  { month: "Aug", feedbacks: 120, positive: 80, negative: 15 },
-  { month: "Sep", feedbacks: 145, positive: 95, negative: 20 },
-  { month: "Oct", feedbacks: 180, positive: 120, negative: 25 },
-  { month: "Nov", feedbacks: 210, positive: 145, negative: 22 },
-  { month: "Dec", feedbacks: 195, positive: 130, negative: 28 },
-  { month: "Jan", feedbacks: 234, positive: 160, negative: 18 },
-
-];
-
 const topKeywords = [
   { word: "dashboard", count: 89, sentiment: "positive" },
   { word: "slow", count: 67, sentiment: "negative" },
@@ -39,25 +29,22 @@ const topKeywords = [
 ];
 
 
-
 export default function AnalyticsPage() {
   const [categoryCounts, setcategoryCounts] = useState<Array<{ primary_category: string; _count: number }>>([]);
-  const maxFeedback = Math.max(...monthlyTrends.map((m) => m.feedbacks));
   const totalCategory = categoryData.reduce((acc, c) => acc + c.value, 0);
   const totalFeedbacks = usefeedbackStore(state => state.feedbacks.length);
   const fetchFeedbacks = usefeedbackStore(state => state.fetchFeedbacks);
   const loading = usefeedbackStore(state => state.loading);
+  const feedbacks = usefeedbackStore(state => state.feedbacks);
+
   useEffect(() => {
     async function fetchCategories() {
       const res = await axios.get('/api/v1/getCategory');
       setcategoryCounts(res.data.categories);
-      console.log(res.data.categories);
     }
     fetchFeedbacks();
     fetchCategories();
   }, []);
-  const feedbacks = usefeedbackStore(state => state.feedbacks);
-  console.log(feedbacks);
 
   function thisMonthFeedbackCount() {
     const now = new Date();
@@ -100,6 +87,46 @@ export default function AnalyticsPage() {
       stroke: "#ef4444"
     },
   ];
+
+  // Calculate monthly trends from actual feedbacks (last 6 months)
+  const monthlyTrends = (() => {
+    const now = new Date();
+    const trends = [];
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    // Generate last 6 months
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const month = date.getMonth();
+      const year = date.getFullYear();
+
+      // Filter feedbacks for this month
+      const monthFeedbacks = feedbacks.filter((feedback) => {
+        const createdAt = new Date(feedback.createdAt);
+        return createdAt.getMonth() === month && createdAt.getFullYear() === year;
+      });
+      if(monthFeedbacks.length === 0) continue; // Skip months with no feedback
+      trends.push({
+        month: monthNames[month],
+        feedbacks: monthFeedbacks.length,
+        positive: monthFeedbacks.filter(f => f.sentiment === "Positive").length,
+        negative: monthFeedbacks.filter(f => f.sentiment === "Negative").length,
+      });
+    }
+
+    return trends;
+  })();
+
+  const maxFeedback = monthlyTrends.length > 0 ? Math.max(...monthlyTrends.map((m) => m.feedbacks)) : 1;
+
+  // Calculate month-over-month growth
+  const monthOverMonthGrowth = (() => {
+    if (monthlyTrends.length < 2) return 0;
+    const currentMonth = monthlyTrends[monthlyTrends.length - 1].feedbacks;
+    const lastMonth = monthlyTrends[monthlyTrends.length - 2].feedbacks;
+    if (lastMonth === 0) return currentMonth > 0 ? 100 : 0;
+    return Math.round(((currentMonth - lastMonth) / lastMonth) * 100);
+  })();
 
   function highestSentimentRate() {
     const positiveRate = sentimentData[0].value;
@@ -206,17 +233,17 @@ export default function AnalyticsPage() {
                     Highest Sentiment Rate
                   </p>
                   {highestSentimentRate().label == "Positive" && (
-                    <p className="text-3xl font-bold text-green-900 dark:text-green-600 mt-2">
+                    <p className="text-3xl font-bold text-emerald-500 dark:text-emerald-500 mt-2">
                       {highestSentimentRate().value}% <span className="text-xl font-thin">positive</span>
                     </p>
                   )}
                   {highestSentimentRate().label == "Neutral" && (
-                    <p className="text-3xl font-bold text-gray-700 dark:text-gray-500 mt-2">
+                    <p className="text-3xl font-bold text-zinc-500 dark:text-zinc-400 mt-2">
                       {highestSentimentRate().value}% <span className="text-xl font-thin">neutral</span>
                     </p>
                   )}
                   {highestSentimentRate().label == "Negative" && (
-                    <p className="text-3xl font-bold text-red-900 dark:text-red-600 mt-2">
+                    <p className="text-3xl font-bold text-red-500 dark:text-red-500 mt-2">
                       {highestSentimentRate().value}% <span className="text-xl font-thin">negative</span>
                     </p>
                   )}
@@ -269,8 +296,8 @@ export default function AnalyticsPage() {
                     />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center flex-col">
-                    <p className="text-3xl font-bold text-zinc-900 dark:text-white">{sentimentData[0].value}%</p>
-                    <p className="text-sm text-zinc-500">Positive</p>
+                    <p className="text-3xl font-bold text-zinc-900 dark:text-white">{highestSentimentRate().value}%</p>
+                    <p className="text-sm text-zinc-500">{highestSentimentRate().label}</p>
                   </div>
                 </div>
               </div>
@@ -310,14 +337,16 @@ export default function AnalyticsPage() {
               </div>
               <div className="flex items-center justify-between mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
                 <div>
-                  <p className="text-2xl font-bold text-zinc-900 dark:text-white">+18%</p>
+                  <p className="text-2xl font-bold text-zinc-900 dark:text-white">
+                    {monthOverMonthGrowth >= 0 ? '+' : ''}{monthOverMonthGrowth}%
+                  </p>
                   <p className="text-sm text-zinc-500">vs last month</p>
                 </div>
-                <div className="flex items-center gap-2 text-emerald-600">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className={`flex items-center gap-2 ${monthOverMonthGrowth >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                  <svg className={`w-5 h-5 ${monthOverMonthGrowth < 0 ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                   </svg>
-                  <span className="text-sm font-medium">Trending up</span>
+                  <span className="text-sm font-medium">{monthOverMonthGrowth >= 0 ? 'Trending up' : 'Trending down'}</span>
                 </div>
               </div>
             </CardContent>
