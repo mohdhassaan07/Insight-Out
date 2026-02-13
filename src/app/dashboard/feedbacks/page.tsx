@@ -60,6 +60,7 @@ function formatDate(dateString: string) {
 
 export default function FeedbacksPage() {
   const fetchfeedbacks = usefeedbackStore((s) => s.fetchFeedbacks);
+  const updateApprovestatus = usefeedbackStore((s) => s.updateApprovestatus);
   const feedbacks = usefeedbackStore((s) => s.feedbacks);
   const loading = usefeedbackStore((s) => s.loading);
 
@@ -67,6 +68,7 @@ export default function FeedbacksPage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedSentiment, setSelectedSentiment] = useState("All");
   const [tobeApproved, setTobeApproved] = useState(false);
+  const [approveloading, setapproveLoading] = useState(false);
   const [selectedFeedback, setSelectedFeedback] = useState<typeof mockFeedbacks[0] | null>(null);
 
   const filteredFeedbacks = feedbacks.filter((feedback) => {
@@ -87,12 +89,23 @@ export default function FeedbacksPage() {
 
   async function approveFeedback() {
     try {
+      setapproveLoading(true);
       const res = await axios.put("/api/v1/approveStatus", {
         feedbackId: selectedFeedback?.id
       })
+      if(res.status === 200){
+        updateApprovestatus(selectedFeedback!.id);
+        setSelectedFeedback({
+          ...selectedFeedback!,
+          status : "auto_approved"
+        })
+      }
       console.log(res.data);
     } catch (error) {
       console.error("Failed to approve feedback:", error);
+    }
+    finally{
+      setapproveLoading(false);
     }
   }
 
@@ -302,7 +315,7 @@ export default function FeedbacksPage() {
                   </div>
 
                   <div className="pt-4 flex gap-2 border-t border-zinc-200 dark:border-zinc-800">
-                    {selectedFeedback.status == "self_approved" && <Button onClick={approveFeedback} variant="secondary" className="w-full cursor-pointer">
+                    {selectedFeedback.status == "self_approved" && <Button isLoading={approveloading} onClick={approveFeedback} variant="secondary" className="w-full cursor-pointer">
                       Approve
                     </Button>}
                     <Button variant="outline" className="w-full">
