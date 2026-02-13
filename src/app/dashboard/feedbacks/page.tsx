@@ -1,5 +1,5 @@
 "use client";
-import {useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import DashboardLayout from "@/src/components/layout/DashboardLayout";
 import Card, { CardContent, CardHeader } from "@/src/components/ui/Card";
 import Badge from "@/src/components/ui/Badge";
@@ -7,6 +7,7 @@ import Button from "@/src/components/ui/Button";
 import Input from "@/src/components/ui/Input";
 import { usefeedbackStore } from "@/src/store/feedbackStore";
 import { FeedbackSkeleton, LoadingCard } from "@/src/components/ui/Loading";
+import axios from "axios";
 
 // Mock data - in production, fetch from API
 
@@ -65,15 +66,16 @@ export default function FeedbacksPage() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedSentiment, setSelectedSentiment] = useState("All");
+  const [tobeApproved, setTobeApproved] = useState(false);
   const [selectedFeedback, setSelectedFeedback] = useState<typeof mockFeedbacks[0] | null>(null);
 
   const filteredFeedbacks = feedbacks.filter((feedback) => {
     const matchesSearch = feedback.feedback_text.toLowerCase().includes(search.toLowerCase());
     const matchesCategory = selectedCategory === "All" || feedback.primary_category === selectedCategory;
     const matchesSentiment = selectedSentiment === "All" || feedback.sentiment === selectedSentiment;
-    return matchesSearch && matchesCategory && matchesSentiment;
+    const matchesStatus = !tobeApproved || feedback.status === "self_approved";
+    return matchesSearch && matchesCategory && matchesSentiment && matchesStatus;
   });
-
 
   useEffect(() => {
     async function loadFeedbacks() {
@@ -82,6 +84,17 @@ export default function FeedbacksPage() {
     }
     loadFeedbacks();
   }, []);
+
+  async function approveFeedback() {
+    try {
+      const res = await axios.put("/api/v1/approveStatus", {
+        feedbackId: selectedFeedback?.id
+      })
+      console.log(res.data);
+    } catch (error) {
+      console.error("Failed to approve feedback:", error);
+    }
+  }
 
   return (
     <DashboardLayout>
@@ -126,7 +139,7 @@ export default function FeedbacksPage() {
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="px-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="pl-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   {categories.map((category) => (
                     <option key={category} value={category}>
@@ -145,6 +158,7 @@ export default function FeedbacksPage() {
                     </option>
                   ))}
                 </select>
+                <Button variant="outline" onClick={() => setTobeApproved(!tobeApproved)} className={`cursor-pointer py-0 tracking-tight ${tobeApproved && "bg-zinc-700 outline-3"}`} size="md">To be Approved</Button>
               </div>
             </div>
           </CardContent>
@@ -287,7 +301,10 @@ export default function FeedbacksPage() {
                     </p>
                   </div>
 
-                  <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800">
+                  <div className="pt-4 flex gap-2 border-t border-zinc-200 dark:border-zinc-800">
+                    {selectedFeedback.status == "self_approved" && <Button onClick={approveFeedback} variant="secondary" className="w-full cursor-pointer">
+                      Approve
+                    </Button>}
                     <Button variant="outline" className="w-full">
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
