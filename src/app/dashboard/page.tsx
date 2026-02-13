@@ -7,6 +7,7 @@ import Button from "@/src/components/ui/Button";
 import Link from "next/link";
 import prisma from "@/src/lib/prisma";
 import { authOptions } from "@/src/lib/auth";
+import { JSX } from "react";
 
 async function getDashboardData(organizationId: string) {
   const now = new Date();
@@ -23,6 +24,8 @@ async function getDashboardData(organizationId: string) {
     lastMonthFeedbacks,
     thisMonthSentimentCounts,
     lastMonthSentimentCounts,
+    thisMonthCategoryCounts,
+    lastMonthCategoryCounts,
   ] = await Promise.all([
     prisma.feedback.count({
       where: { organizationId },
@@ -70,6 +73,22 @@ async function getDashboardData(organizationId: string) {
       },
       _count: true,
     }),
+    prisma.feedback.groupBy({
+      where: { 
+        organizationId,
+        createdAt: { gte: thisMonthStart }
+      },
+      by: ['primary_category'],
+      _count: true,
+    }),
+    prisma.feedback.groupBy({
+      where: { 
+        organizationId,
+        createdAt: { gte: lastMonthStart, lte: lastMonthEnd }
+      },
+      by: ['primary_category'],
+      _count: true,
+    }),
   ]);
   
   const feedbackIncrementPercent = lastMonthFeedbacks > 0
@@ -79,8 +98,23 @@ async function getDashboardData(organizationId: string) {
   const positiveCount = sentimentCounts.find(s => s.sentiment === "Positive")?._count || 0;
   const positivePercentage = totalFeedbacks > 0 ? Math.round((positiveCount / totalFeedbacks) * 100) : 0;
 
-  const featureRequestCount = categoryCounts.find(c => c.primary_category === "Feature_Request")?._count || 0;
-  const bugCount = categoryCounts.find(c => c.primary_category === "Bug")?._count || 0;
+  // Get top 2 categories with increment percentages
+  const top2Categories = categoryCounts
+    .sort((a, b) => b._count - a._count)
+    .slice(0, 2)
+    .map(cat => {
+      const thisMonthCount = thisMonthCategoryCounts.find(c => c.primary_category === cat.primary_category)?._count || 0;
+      const lastMonthCount = lastMonthCategoryCounts.find(c => c.primary_category === cat.primary_category)?._count || 0;
+      const incrementPercent = lastMonthCount > 0
+        ? Math.round(((thisMonthCount - lastMonthCount) / lastMonthCount) * 100)
+        : (thisMonthCount > 0 ? 100 : 0);
+      
+      return {
+        category: cat.primary_category,
+        count: cat._count,
+        incrementPercent,
+      };
+    });
 
   // Calculate sentiment increment percentages synchronously from pre-fetched data
   function getIncrementPercent(sentiment: string) {
@@ -102,17 +136,58 @@ async function getDashboardData(organizationId: string) {
     positiveIncrementPercent,
     negativeIncrementPercent,
     neutralIncrementPercent,
-    featureRequestCount,
-    bugCount,
+    top2Categories,
     recentFeedback,
     categoryCounts,
   };
 
 }
 
-function getStats(data: { totalFeedbacks: number; feedbackIncrementPercent: number; positivePercentage: number; positiveIncrementPercent: number; featureRequestCount: number; bugCount: number }) {
+function getStats(data: { 
+  totalFeedbacks: number; 
+  feedbackIncrementPercent: number; 
+  positivePercentage: number; 
+  positiveIncrementPercent: number; 
+  top2Categories: { category: string; count: number; incrementPercent: number }[] 
+}) {
   const incrementSign = data.feedbackIncrementPercent >= 0 ? "+" : "";
-  return [
+  
+  const getCategoryIcon = (category: string) => {
+    const iconMap: Record<string, JSX.Element> = {
+      Feature_Request: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        </svg>
+      ),
+      Bug: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      ),
+      Praise: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+        </svg>
+      ),
+      UI_UX: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+        </svg>
+      ),
+      Performance: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      ),
+    };
+    return iconMap[category] || (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+      </svg>
+    );
+  };
+
+  const stats = [
     {
       label: "Total Feedbacks",
       value: data.totalFeedbacks.toLocaleString(),
@@ -135,29 +210,20 @@ function getStats(data: { totalFeedbacks: number; feedbackIncrementPercent: numb
         </svg>
       ),
     },
-    {
-      label: "Feature Requests",
-      value: data.featureRequestCount.toLocaleString(),
-      change: "+18%",
-      changeType: "positive",
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-        </svg>
-      ),
-    },
-    {
-      label: "Bug Reports",
-      value: data.bugCount.toLocaleString(),
-      change: "-23%",
-      changeType: "negative",
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-        </svg>
-      ),
-    },
   ];
+
+  // Add top 2 categories dynamically
+  data.top2Categories.forEach(cat => {
+    stats.push({
+      label: cat.category.replace("_", " "),
+      value: cat.count.toLocaleString(),
+      change: `${cat.incrementPercent >= 0 ? "+" : ""}${cat.incrementPercent}%`,
+      changeType: cat.incrementPercent >= 0 ? "positive" : "negative",
+      icon: getCategoryIcon(cat.category),
+    });
+  });
+
+  return stats;
 }
 
 function timeAgo(date: Date) {
@@ -196,10 +262,10 @@ function getCategoryBadge(category: string) {
 
 export default async function Dashboard() {
   const session = await getServerSession(authOptions);
-  if (!session) redirect("/signin");
+  if (!session) redirect("/");
 
-  const { totalFeedbacks, feedbackIncrementPercent, positivePercentage, positiveIncrementPercent, featureRequestCount, bugCount, recentFeedback, categoryCounts } = await getDashboardData(session.user.organizationId);
-  const stats = getStats({ totalFeedbacks, feedbackIncrementPercent, positivePercentage, positiveIncrementPercent, featureRequestCount, bugCount });
+  const { totalFeedbacks, feedbackIncrementPercent, positivePercentage, positiveIncrementPercent, top2Categories, recentFeedback, categoryCounts } = await getDashboardData(session.user.organizationId);
+  const stats = getStats({ totalFeedbacks, feedbackIncrementPercent, positivePercentage, positiveIncrementPercent, top2Categories });
 
   // Calculate category distribution dynamically
   const categoryDistribution = categoryCounts.map(cat => {
