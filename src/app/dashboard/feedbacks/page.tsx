@@ -9,13 +9,19 @@ import { usefeedbackStore } from "@/src/store/feedbackStore";
 import { FeedbackSkeleton, LoadingCard } from "@/src/components/ui/Loading";
 import axios from "axios";
 
-// Mock data - in production, fetch from API
-
-const mockFeedbacks = [
-  { id: "1", feedback_text: "Love the new dashboard! It's so much easier to navigate and find what I need.", primary_category: "Praise", sentiment: "Positive", confidence: 0.95, source: "Email", status: "auto_approved", createdAt: "2026-01-23T10:30:00Z" },
-];
+interface Feedback {
+  id: string;
+  feedback_text: string;
+  primary_category: string;
+  sentiment: string;
+  confidence: number;
+  source: string;
+  status: string;
+  createdAt: string;
+}
 
 const categories = ["All", "Bug", "Feature_Request", "Performance", "UI_UX", "Positive_Feedback", "Pricing", "Support", "Praise", "Other"];
+const editableCategories = ["Bug", "Feature_Request", "Performance", "UI_UX", "Positive_Feedback", "Pricing", "Support", "Praise", "Other"];
 const sentiments = ["All", "Positive", "Neutral", "Negative"];
 
 function getSentimentBadge(sentiment: string) {
@@ -61,6 +67,8 @@ function formatDate(dateString: string) {
 export default function FeedbacksPage() {
   const fetchfeedbacks = usefeedbackStore((s) => s.fetchFeedbacks);
   const updateApprovestatus = usefeedbackStore((s) => s.updateApprovestatus);
+  const updateCategory = usefeedbackStore((s) => s.updateCategory);
+  const updateFeedbackFields = usefeedbackStore((s) => s.updateFeedbackFields);
   const feedbacks = usefeedbackStore((s) => s.feedbacks);
   const loading = usefeedbackStore((s) => s.loading);
 
@@ -69,7 +77,12 @@ export default function FeedbacksPage() {
   const [selectedSentiment, setSelectedSentiment] = useState("All");
   const [tobeApproved, setTobeApproved] = useState(false);
   const [approveloading, setapproveLoading] = useState(false);
-  const [selectedFeedback, setSelectedFeedback] = useState<typeof mockFeedbacks[0] | null>(null);
+  const [selectedFeedback, setSelectedFeedback] = useState<Feedback | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [editCategory, setEditCategory] = useState("");
+  const [editSentiment, setEditSentiment] = useState("");
+  const [editSource, setEditSource] = useState("");
+  const [editLoading, setEditLoading] = useState(false);
 
   const filteredFeedbacks = feedbacks.filter((feedback) => {
     const matchesSearch = feedback.feedback_text.toLowerCase().includes(search.toLowerCase());
@@ -87,24 +100,63 @@ export default function FeedbacksPage() {
     loadFeedbacks();
   }, []);
 
+  function startEditing() {
+    if (!selectedFeedback) return;
+    setEditCategory(selectedFeedback.primary_category);
+    setEditSentiment(selectedFeedback.sentiment);
+    setEditSource(selectedFeedback.source || "");
+    setEditing(true);
+  }
+
+  async function saveEdits() {
+    if (!selectedFeedback) return;
+    const fields: { primary_category?: string; sentiment?: string; source?: string } = {};
+    if (editCategory !== selectedFeedback.primary_category) fields.primary_category = editCategory;
+    if (editSentiment !== selectedFeedback.sentiment) fields.sentiment = editSentiment;
+    if (editSource !== (selectedFeedback.source || "")) fields.source = editSource;
+
+    if (Object.keys(fields).length === 0) {
+      setEditing(false);
+      return;
+    }
+    try {
+      setEditLoading(true);
+      const res = await axios.put("/api/v1/updateCategory", {
+        feedbackId: selectedFeedback.id,
+        category: fields.primary_category,
+        sentiment: fields.sentiment,
+        source: fields.source,
+      });
+      if (res.status === 200) {
+        updateFeedbackFields(selectedFeedback.id, fields);
+        setSelectedFeedback({ ...selectedFeedback, ...fields, source: editSource });
+        setEditing(false);
+      }
+    } catch (error) {
+      console.error("Failed to update feedback:", error);
+    } finally {
+      setEditLoading(false);
+    }
+  }
+
   async function approveFeedback() {
     try {
       setapproveLoading(true);
       const res = await axios.put("/api/v1/approveStatus", {
         feedbackId: selectedFeedback?.id
       })
-      if(res.status === 200){
+      if (res.status === 200) {
         updateApprovestatus(selectedFeedback!.id);
         setSelectedFeedback({
           ...selectedFeedback!,
-          status : "auto_approved"
+          status: "auto_approved"
         })
       }
       console.log(res.data);
     } catch (error) {
       console.error("Failed to approve feedback:", error);
     }
-    finally{
+    finally {
       setapproveLoading(false);
     }
   }
@@ -171,7 +223,10 @@ export default function FeedbacksPage() {
                     </option>
                   ))}
                 </select>
-                <Button variant="outline" onClick={() => setTobeApproved(!tobeApproved)} className={`cursor-pointer py-0 tracking-tight ${tobeApproved && "bg-zinc-700 outline-3"}`} size="md">To be Approved</Button>
+                <Button variant="outline" onClick={() => setTobeApproved(!tobeApproved)}
+                  className={`cursor-pointer py-0 tracking-tight outline-none focus:outline-none focus-visible:outline-none active:outline-none focus:ring-0 focus:ring-offset-0 
+                ${tobeApproved && " shadow-md shadow-indigo-500 "}`} size="md">To be Approved
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -230,103 +285,188 @@ export default function FeedbacksPage() {
           {/* Detail Panel */}
           <div>
             {selectedFeedback ? (
-              <Card className="sticky top-8">
-                <CardHeader>
-                  <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
-                    Feedback Details
-                  </h2>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                      Feedback
-                    </label>
-                    <p className="mt-1 text-sm text-zinc-900 dark:text-white">
-                      {selectedFeedback.feedback_text}
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
+              editing ? (
+                <Card className="sticky top-8">
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
+                      Edit Feedback
+                    </h2>
+                    <button onClick={() => setEditing(false)} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 cursor-pointer">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </CardHeader>
+                  <CardContent className="space-y-5">
                     <div>
                       <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                        Feedback
+                      </label>
+                      <p className="mt-1 text-sm text-zinc-900 dark:text-white line-clamp-3">
+                        {selectedFeedback.feedback_text}
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider block mb-1.5">
                         Category
                       </label>
-                      <div className="mt-1">
-                        {getCategoryBadge(selectedFeedback.primary_category ?? "Other")}
-                      </div>
+                      <select
+                        value={editCategory}
+                        onChange={(e) => setEditCategory(e.target.value)}
+                        className="w-full px-3 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      >
+                        {editableCategories.map((cat) => (
+                          <option key={cat} value={cat}>{cat.replace("_", " ")}</option>
+                        ))}
+                      </select>
                     </div>
+
                     <div>
-                      <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                      <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider block mb-1.5">
                         Sentiment
                       </label>
-                      <div className="mt-1">
-                        {getSentimentBadge(selectedFeedback.sentiment)}
-                      </div>
+                      <select
+                        value={editSentiment}
+                        onChange={(e) => setEditSentiment(e.target.value)}
+                        className="w-full px-3 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      >
+                        {["Positive", "Neutral", "Negative"].map((s) => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
                     </div>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider block mb-1.5">
+                        Source
+                      </label>
+                      <input
+                        type="text"
+                        value={editSource}
+                        onChange={(e) => setEditSource(e.target.value)}
+                        placeholder="e.g. Email, Twitter, Survey..."
+                        className="w-full px-3 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-sm text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder:text-zinc-400"
+                      />
+                    </div>
+
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        isLoading={editLoading}
+                        onClick={saveEdits}
+                        className="w-full cursor-pointer"
+                      >
+                        Save Changes
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setEditing(false)}
+                        className="w-full cursor-pointer"
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card className="sticky top-8">
+                  <CardHeader>
+                    <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
+                      Feedback Details
+                    </h2>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
                     <div>
                       <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                        Confidence
+                        Feedback
                       </label>
-                      <div className="mt-1">
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-linear-to-r from-indigo-600 to-purple-600 rounded-full"
-                              style={{ width: `${selectedFeedback.confidence * 100}%` }}
-                            />
-                          </div>
-                          <span className="text-sm font-medium text-zinc-900 dark:text-white">
-                            {(selectedFeedback.confidence * 100).toFixed(0)}%
-                          </span>
+                      <p className="mt-1 text-sm text-zinc-900 dark:text-white">
+                        {selectedFeedback.feedback_text}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                          Category
+                        </label>
+                        <div className="mt-1">
+                          {getCategoryBadge(selectedFeedback.primary_category ?? "Other")}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                          Sentiment
+                        </label>
+                        <div className="mt-1">
+                          {getSentimentBadge(selectedFeedback.sentiment)}
                         </div>
                       </div>
                     </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                          Confidence
+                        </label>
+                        <div className="mt-1">
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-linear-to-r from-indigo-600 to-purple-600 rounded-full"
+                                style={{ width: `${selectedFeedback.confidence * 100}%` }}
+                              />
+                            </div>
+                            <span className="text-sm font-medium text-zinc-900 dark:text-white">
+                              {(selectedFeedback.confidence * 100).toFixed(0)}%
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                          Source
+                        </label>
+                        <p className="mt-1 text-sm text-zinc-900 dark:text-white">
+                          {selectedFeedback.source || "Unknown"}
+                        </p>
+                      </div>
+                    </div>
+
                     <div>
                       <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                        Source
+                        Status
+                      </label>
+                      <div className="mt-1">
+                        <Badge variant="success">
+                          {selectedFeedback.status.replace("_", " ")}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
+                        Created At
                       </label>
                       <p className="mt-1 text-sm text-zinc-900 dark:text-white">
-                        {selectedFeedback.source || "Unknown"}
+                        {formatDate(selectedFeedback.createdAt)}
                       </p>
                     </div>
-                  </div>
 
-                  <div>
-                    <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                      Status
-                    </label>
-                    <div className="mt-1">
-                      <Badge variant="success">
-                        {selectedFeedback.status.replace("_", " ")}
-                      </Badge>
+                    <div className="pt-4 flex gap-2 border-t border-zinc-200 dark:border-zinc-800">
+                      {selectedFeedback.status == "self_approved" && <Button isLoading={approveloading} onClick={approveFeedback} variant="secondary" className="w-full cursor-pointer">
+                        Approve
+                      </Button>}
+                      <Button variant="outline" className="w-full cursor-pointer" onClick={startEditing}>
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Edit
+                      </Button>
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                      Created At
-                    </label>
-                    <p className="mt-1 text-sm text-zinc-900 dark:text-white">
-                      {formatDate(selectedFeedback.createdAt)}
-                    </p>
-                  </div>
-
-                  <div className="pt-4 flex gap-2 border-t border-zinc-200 dark:border-zinc-800">
-                    {selectedFeedback.status == "self_approved" && <Button isLoading={approveloading} onClick={approveFeedback} variant="secondary" className="w-full cursor-pointer">
-                      Approve
-                    </Button>}
-                    <Button variant="outline" className="w-full">
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                      Edit Category
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )
             ) : (
               <Card>
                 <CardContent className="p-12 text-center">

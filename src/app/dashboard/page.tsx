@@ -296,7 +296,7 @@ export default async function Dashboard() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
-              Welcome back!
+              Welcome back! <span className="bg-linear-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent">{session.user.organizationName}</span>
             </h1>
             <p className="text-zinc-600 dark:text-zinc-400 mt-1">
               Here&apos;s what&apos;s happening with your feedback today.

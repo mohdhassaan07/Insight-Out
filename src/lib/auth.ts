@@ -22,6 +22,10 @@ export const authOptions: NextAuthOptions = {
                 const user = await prisma.user.findUnique({
                     where: { email: credentials.email }
                 });
+                const organization = await prisma.organization.findUnique({
+                    where: { id: user?.organizationId }
+                });
+
 
                 if (!user || !user.password) {
                     throw new Error("User not found");
@@ -41,7 +45,8 @@ export const authOptions: NextAuthOptions = {
                     name: user.name,
                     email: user.email,
                     organizationId: user.organizationId,
-                    role: user.role
+                    role: user.role,
+                    organizationName: organization?.name || "Unknown Organization"
                 };
             }
         })
@@ -52,6 +57,7 @@ export const authOptions: NextAuthOptions = {
                 token.name = user.name;
                 token.organizationId = user.organizationId;
                 token.role = user.role;
+                token.organizationName = user.organizationName;
             }
             return token;
         },
@@ -59,6 +65,7 @@ export const authOptions: NextAuthOptions = {
             session.user.name = token.name as string;
             session.user.organizationId = token.organizationId as string;
             session.user.role = token.role as string;
+            session.user.organizationName = token.organizationName as string;
             return session;
         }
     },
