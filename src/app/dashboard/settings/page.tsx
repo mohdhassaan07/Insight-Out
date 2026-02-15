@@ -4,8 +4,9 @@ import Card, { CardContent, CardHeader } from "@/src/components/ui/Card";
 import Button from "@/src/components/ui/Button";
 import Input from "@/src/components/ui/Input";
 import Badge from "@/src/components/ui/Badge";
-
+import { useSession } from "next-auth/react";
 export default function SettingsPage() {
+  const session = useSession();
   return (
     <DashboardLayout>
       <div className="p-8 max-w-4xl">
@@ -37,8 +38,8 @@ export default function SettingsPage() {
                 </div>
               </div>
               <div className="grid md:grid-cols-2 gap-4">
-                <Input label="Full Name" placeholder="John Doe" />
-                <Input label="Email" type="email" placeholder="you@/srcexample.com" disabled />
+                <Input label="Full Name" placeholder="John Doe" value={`${session?.data?.user.name}`} />
+                <Input label="Email" type="email" placeholder={`${session.data?.user.email}`} disabled />
               </div>
               <div className="pt-2">
                 <Button>Save Changes</Button>
@@ -54,7 +55,7 @@ export default function SettingsPage() {
               </h2>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Input label="Organization Name" placeholder="Acme Inc." />
+              <Input label="Organization Name" placeholder="Acme Inc." value={`${session.data?.user.organizationName}`} />
               <div>
                 <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
                   Current Plan

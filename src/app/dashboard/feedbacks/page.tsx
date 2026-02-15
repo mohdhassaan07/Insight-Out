@@ -95,11 +95,10 @@ export default function FeedbacksPage() {
   useEffect(() => {
     async function loadFeedbacks() {
       await fetchfeedbacks();
-      console.log(feedbacks);
     }
     loadFeedbacks();
   }, []);
-
+  
   function startEditing() {
     if (!selectedFeedback) return;
     setEditCategory(selectedFeedback.primary_category);
