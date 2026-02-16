@@ -12,8 +12,9 @@ model User{
   name   String?
   email  String  @unique
   password  String
-  role  Role  @default(Admin)
+  role  String  @default("Admin")
   organizationId  String
+  profilePic String? @default("https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Default_pfp.svg/250px-Default_pfp.svg.png")
   organization  Organization  @relation(fields : [organizationId], references : [id])
   createdAt DateTime  @default(now())
 }
@@ -68,8 +69,4 @@ enum Sentiments{
   Positive
   Neutral
   Negative
-}
-
-enum Role{
-  Admin
 }

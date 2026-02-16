@@ -5,8 +5,40 @@ import Button from "@/src/components/ui/Button";
 import Input from "@/src/components/ui/Input";
 import Badge from "@/src/components/ui/Badge";
 import { useSession } from "next-auth/react";
+import { useRef, useState } from "react";
 export default function SettingsPage() {
   const session = useSession();
+  const [formData, setformData] = useState({
+    name: `${session.data?.user.name}`,
+    organizationName: `${session.data?.user.organizationName}`,
+  })
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const handlechange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    setformData((prev)=>({
+      ...prev,
+      [e.target.name]: e.target.value
+    }))
+  }
+  
+  const changeAvatar = () => {
+    fileInputRef.current?.click();
+  }
+  
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+
   return (
     <DashboardLayout>
       <div className="p-8 max-w-4xl">
@@ -30,15 +62,26 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-linear-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-2xl font-bold">
-                  U
+                <div className="w-16 h-16 rounded-full bg-linear-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-2xl font-bold overflow-hidden">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Default_pfp.svg/250px-Default_pfp.svg.png" alt="Avatar" className="w-full h-full object-cover" />
+                  )}
                 </div>
                 <div>
-                  <Button variant="outline" size="sm">Change Avatar</Button>
+                  <Button variant="outline" onClick={changeAvatar} size="sm">Change Avatar</Button>
+                  <input 
+                    type="file" 
+                    ref={fileInputRef}
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    hidden 
+                  />
                 </div>
               </div>
               <div className="grid md:grid-cols-2 gap-4">
-                <Input label="Full Name" placeholder="John Doe" value={`${session?.data?.user.name}`} />
+                <Input label="Full Name" placeholder="John Doe" name="name" onChange={handlechange} value={formData.name} />
                 <Input label="Email" type="email" placeholder={`${session.data?.user.email}`} disabled />
               </div>
               <div className="pt-2">
@@ -55,7 +98,7 @@ export default function SettingsPage() {
               </h2>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Input label="Organization Name" placeholder="Acme Inc." value={`${session.data?.user.organizationName}`} />
+              <Input label="Organization Name" placeholder="Acme Inc." name="organizationName" onChange={handlechange} value={formData.organizationName} />
               <div>
                 <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
                   Current Plan
