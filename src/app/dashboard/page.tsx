@@ -8,6 +8,7 @@ import Link from "next/link";
 import prisma from "@/src/lib/prisma";
 import { authOptions } from "@/src/lib/auth";
 import { JSX } from "react";
+import GenerateSummaryButton from "@/src/components/ui/GenerateSummaryButton";
 
 async function getDashboardData(organizationId: string) {
   const now = new Date();
@@ -52,14 +53,14 @@ async function getDashboardData(organizationId: string) {
       },
     }),
     prisma.feedback.count({
-      where: { 
+      where: {
         organizationId,
         createdAt: { gte: lastMonthStart, lte: lastMonthEnd }
       },
     }),
     prisma.feedback.groupBy({
       by: ['sentiment'],
-      where: { 
+      where: {
         organizationId,
         createdAt: { gte: thisMonthStart }
       },
@@ -67,14 +68,14 @@ async function getDashboardData(organizationId: string) {
     }),
     prisma.feedback.groupBy({
       by: ['sentiment'],
-      where: { 
+      where: {
         organizationId,
         createdAt: { gte: lastMonthStart, lte: lastMonthEnd }
       },
       _count: true,
     }),
     prisma.feedback.groupBy({
-      where: { 
+      where: {
         organizationId,
         createdAt: { gte: thisMonthStart }
       },
@@ -82,7 +83,7 @@ async function getDashboardData(organizationId: string) {
       _count: true,
     }),
     prisma.feedback.groupBy({
-      where: { 
+      where: {
         organizationId,
         createdAt: { gte: lastMonthStart, lte: lastMonthEnd }
       },
@@ -90,7 +91,7 @@ async function getDashboardData(organizationId: string) {
       _count: true,
     }),
   ]);
-  
+
   const feedbackIncrementPercent = lastMonthFeedbacks > 0
     ? Math.round(((thisMonthFeedbacks - lastMonthFeedbacks) / lastMonthFeedbacks) * 100)
     : (thisMonthFeedbacks > 0 ? 100 : 0);
@@ -108,7 +109,7 @@ async function getDashboardData(organizationId: string) {
       const incrementPercent = lastMonthCount > 0
         ? Math.round(((thisMonthCount - lastMonthCount) / lastMonthCount) * 100)
         : (thisMonthCount > 0 ? 100 : 0);
-      
+
       return {
         category: cat.primary_category,
         count: cat._count,
@@ -143,15 +144,15 @@ async function getDashboardData(organizationId: string) {
 
 }
 
-function getStats(data: { 
-  totalFeedbacks: number; 
-  feedbackIncrementPercent: number; 
-  positivePercentage: number; 
-  positiveIncrementPercent: number; 
-  top2Categories: { category: string; count: number; incrementPercent: number }[] 
+function getStats(data: {
+  totalFeedbacks: number;
+  feedbackIncrementPercent: number;
+  positivePercentage: number;
+  positiveIncrementPercent: number;
+  top2Categories: { category: string; count: number; incrementPercent: number }[]
 }) {
   const incrementSign = data.feedbackIncrementPercent >= 0 ? "+" : "";
-  
+
   const getCategoryIcon = (category: string) => {
     const iconMap: Record<string, JSX.Element> = {
       Feature_Request: (
@@ -296,7 +297,8 @@ export default async function Dashboard() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
-              Welcome back! <span className="bg-linear-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent">{session.user.organizationName}</span>
+              Welcome back!
+              {/* <span className="bg-linear-to-r from-indigo-500 to-purple-600 font-extrabold bg-clip-text text-transparent">{session.user.organizationName}</span> */}
             </h1>
             <p className="text-zinc-600 dark:text-zinc-400 mt-1">
               Here&apos;s what&apos;s happening with your feedback today.
@@ -320,6 +322,7 @@ export default async function Dashboard() {
                 View All
               </Button>
             </Link>
+            <GenerateSummaryButton />
           </div>
         </div>
 
