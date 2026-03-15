@@ -6,7 +6,8 @@ import prisma from "@/src/lib/prisma";
 import { v7 as uuidv7 } from "uuid";
 import { authOptions } from "@/src/lib/auth"
 import { getServerSession } from "next-auth";
-const id = uuidv7();
+
+const MAX_FEEDBACKS_PER_UPLOAD = 200;
 
 function preprocessFeedback(text: string): string {
     return text
@@ -111,6 +112,12 @@ export async function POST(req: Request) {
                 { status: 400 }
             )
         }
+        if (file.size > 5 * 1024 * 1024) {
+            return NextResponse.json(
+                { error: "File size must be 5 MB or less" },
+                { status: 413 }
+            )
+        }
 
         const buffer = Buffer.from(await file.arrayBuffer());
         const results: any[] = [];
@@ -137,6 +144,13 @@ export async function POST(req: Request) {
                 feedback: preprocessFeedback(row.feedback),
                 source: row.source ? row.source : "unknown" // default source if not provided
             }));
+
+        if (rows.length > MAX_FEEDBACKS_PER_UPLOAD) {
+            return NextResponse.json(
+                { error: `Maximum ${MAX_FEEDBACKS_PER_UPLOAD} feedbacks can be uploaded at once` },
+                { status: 400 }
+            );
+        }
 
         const batches = arrayChunks(rows, 10);
         const finalResults: any = [];

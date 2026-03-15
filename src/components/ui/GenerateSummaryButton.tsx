@@ -60,7 +60,7 @@ export default function GenerateSummaryButton() {
                             <p className="text-red-500 text-sm py-2">{error}</p>
                         )}
 
-                        <div className="prose rmv-scrollbar flex justify-center items-center prose-sm dark:prose-invert text-justify outline-2 outline-indigo-500 min-h-70 rounded-md p-4 dark:bg-zinc-900 mt-10  max-h-80 overflow-y-auto whitespace-pre-wrap text-zinc-700 dark:text-zinc-300">
+                        <div className="prose rmv-scrollbar flex justify-center items-center prose-sm dark:prose-invert text-justify outline-2 outline-indigo-500 min-h-70 rounded-md p-4 dark:bg-zinc-900 max-h-80 overflow-y-auto whitespace-pre-wrap text-zinc-700 dark:text-zinc-300">
                             {isLoading && (
                             <div className="flex items-center justify-center py-12">
                                 <svg className="animate-spin h-8 w-8 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

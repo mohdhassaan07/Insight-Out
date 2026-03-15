@@ -5,6 +5,76 @@ import Card, { CardContent, CardHeader } from "@/src/components/ui/Card";
 import Button from "@/src/components/ui/Button";
 import axios from "axios";
 
+
+function splitCsvLine(line: string): string[] {
+  const values: string[] = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i += 1) {
+    const char = line[i];
+
+    if (char === '"') {
+      const nextChar = line[i + 1];
+      if (inQuotes && nextChar === '"') {
+        current += '"';
+        i += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+
+    if (char === "," && !inQuotes) {
+      values.push(current);
+      current = "";
+      continue;
+    }
+
+    current += char;
+  }
+
+  values.push(current);
+  return values;
+}
+
+function normalizeCsvValue(value: string): string {
+  return value.trim().replace(/^"|"$/g, "").replace(/""/g, '"');
+}
+
+function countValidFeedbackRows(csvText: string): number {
+  const lines = csvText
+    .split(/\r?\n/)
+    .filter((line) => line.trim().length > 0);
+
+  if (lines.length === 0) {
+    return 0;
+  }
+
+  const headers = splitCsvLine(lines[0]).map((header) =>
+    normalizeCsvValue(header).toLowerCase().replace(/\s+/g, "_")
+  );
+
+  const feedbackIndex = headers.findIndex((header) => header === "feedback");
+  const feedbackTextIndex = headers.findIndex((header) => header === "feedback_text");
+  const targetIndex = feedbackIndex !== -1 ? feedbackIndex : feedbackTextIndex;
+
+  if (targetIndex === -1) {
+    throw new Error("Missing feedback column");
+  }
+
+  let validCount = 0;
+  for (const line of lines.slice(1)) {
+    const values = splitCsvLine(line);
+    const feedbackValue = values[targetIndex];
+    if (typeof feedbackValue === "string" && normalizeCsvValue(feedbackValue).length > 0) {
+      validCount += 1;
+    }
+  }
+
+  return validCount;
+}
+
 export default function UploadPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -13,6 +83,48 @@ export default function UploadPage() {
   const [uploadStatus, setUploadStatus] = useState<"idle" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const validateAndSetFile = async (selectedFile: File): Promise<boolean> => {
+    const isCsv =
+      selectedFile.type === "text/csv" ||
+      selectedFile.name.toLowerCase().endsWith(".csv");
+
+    if (!isCsv) {
+      setFile(null);
+      setUploadStatus("error");
+      setMessage("Only CSV files are allowed.");
+      return false;
+    }
+
+    if (selectedFile.size > 5 * 1024 * 1024) {
+      setFile(null);
+      setUploadStatus("error");
+      setMessage("File size must be 5 MB or less.");
+      return false;
+    }
+
+    try {
+      const csvText = await selectedFile.text();
+      const feedbackCount = countValidFeedbackRows(csvText);
+
+      if (feedbackCount > 200) {
+        setFile(null);
+        setUploadStatus("error");
+        setMessage(`Maximum 200 feedbacks can be uploaded at once.`);
+        return false;
+      }
+
+      setFile(selectedFile);
+      setUploadStatus("idle");
+      setMessage("");
+      return true;
+    } catch {
+      setFile(null);
+      setUploadStatus("error");
+      setMessage("Could not validate this CSV file. Please check the format and try again.");
+      return false;
+    }
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -24,21 +136,22 @@ export default function UploadPage() {
     setIsDragging(false);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
     const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile && droppedFile.type === "text/csv") {
-      setFile(droppedFile);
-      setUploadStatus("idle");
+    if (droppedFile) {
+      await validateAndSetFile(droppedFile);
     }
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
-      setFile(selectedFile);
-      setUploadStatus("idle");
+      const isValid = await validateAndSetFile(selectedFile);
+      if (!isValid) {
+        e.target.value = "";
+      }
     }
   };
 
@@ -165,7 +278,7 @@ export default function UploadPage() {
                           Drop your CSV file here, or <span className="text-indigo-600">browse</span>
                         </p>
                         <p className="text-sm text-zinc-500 mt-1">
-                          Supports CSV files up to 10MB
+                          Supports CSV files up to 5MB and 200 feedback rows
                         </p>
                       </div>
                     </div>

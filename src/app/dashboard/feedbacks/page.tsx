@@ -8,6 +8,7 @@ import Input from "@/src/components/ui/Input";
 import { usefeedbackStore } from "@/src/store/feedbackStore";
 import { FeedbackSkeleton, LoadingCard } from "@/src/components/ui/Loading";
 import axios from "axios";
+import GenerateSummaryButton from "@/src/components/ui/GenerateSummaryButton";
 
 interface Feedback {
   id: string;
@@ -173,8 +174,9 @@ export default function FeedbacksPage() {
               Browse and filter all your categorized feedback
             </p>
           </div>
-          <div className="mt-4 md:mt-0">
-            <Button>
+          <div className="mt-4 flex gap-3 md:mt-0">
+            <GenerateSummaryButton/>
+            <Button variant="secondary">
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
