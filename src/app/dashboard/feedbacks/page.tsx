@@ -69,6 +69,7 @@ export default function FeedbacksPage() {
   const fetchfeedbacks = usefeedbackStore((s) => s.fetchFeedbacks);
   const updateApprovestatus = usefeedbackStore((s) => s.updateApprovestatus);
   const updateCategory = usefeedbackStore((s) => s.updateCategory);
+  const hasMore = usefeedbackStore((s) => s.hasMore);
   const updateFeedbackFields = usefeedbackStore((s) => s.updateFeedbackFields);
   const feedbacks = usefeedbackStore((s) => s.feedbacks);
   const loading = usefeedbackStore((s) => s.loading);

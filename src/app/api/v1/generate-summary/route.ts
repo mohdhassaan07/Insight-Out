@@ -46,7 +46,7 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
     try {
-        let month = new Date().getMonth();
+        let month = new Date().getMonth()+1;
         const feedbacks = await prisma.feedback.findMany({
             where:{
                 organizationId: session?.user?.organizationId!,

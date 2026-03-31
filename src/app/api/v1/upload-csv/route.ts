@@ -7,7 +7,7 @@ import { v7 as uuidv7 } from "uuid";
 import { authOptions } from "@/src/lib/auth"
 import { getServerSession } from "next-auth";
 
-const MAX_FEEDBACKS_PER_UPLOAD = 200;
+const MAX_FEEDBACKS_PER_UPLOAD = 500;
 
 function preprocessFeedback(text: string): string {
     return text
