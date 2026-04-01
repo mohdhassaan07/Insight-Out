@@ -28,7 +28,7 @@ export const usefeedbackStore = create<FeedbackStore>((set, get) => ({
     fetchFeedbacks: async () => {
         if (get().feedbacks.length > 0) return;
         const { limit } = get();
-        set({ loading: true })
+        set({ loading: true, page: 1, hasMore: true });
         const res = await axios.get("/api/v1/feedbacks", { params: { page: 1, limit: limit } });
 
         set({

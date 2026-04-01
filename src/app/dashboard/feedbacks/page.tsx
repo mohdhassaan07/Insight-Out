@@ -69,7 +69,10 @@ export default function FeedbacksPage() {
   const fetchfeedbacks = usefeedbackStore((s) => s.fetchFeedbacks);
   const updateApprovestatus = usefeedbackStore((s) => s.updateApprovestatus);
   const updateCategory = usefeedbackStore((s) => s.updateCategory);
+  const loadMoreFeedbacks = usefeedbackStore((s) => s.loadMoreFeedbacks);
   const hasMore = usefeedbackStore((s) => s.hasMore);
+  const loadingMore = usefeedbackStore((s) => s.loadingMore);
+  const total = usefeedbackStore((s) => s.total);
   const updateFeedbackFields = usefeedbackStore((s) => s.updateFeedbackFields);
   const feedbacks = usefeedbackStore((s) => s.feedbacks);
   const loading = usefeedbackStore((s) => s.loading);
@@ -95,12 +98,9 @@ export default function FeedbacksPage() {
   });
 
   useEffect(() => {
-    async function loadFeedbacks() {
-      await fetchfeedbacks();
-    }
-    loadFeedbacks();
+    fetchfeedbacks();
   }, []);
-  
+
   function startEditing() {
     if (!selectedFeedback) return;
     setEditCategory(selectedFeedback.primary_category);
@@ -176,7 +176,7 @@ export default function FeedbacksPage() {
             </p>
           </div>
           <div className="mt-4 flex gap-3 md:mt-0">
-            <GenerateSummaryButton/>
+            <GenerateSummaryButton />
             <Button variant="secondary">
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -236,7 +236,7 @@ export default function FeedbacksPage() {
 
         {/* Results count */}
         <p className="text-sm text-zinc-500 mb-4">
-          Showing {filteredFeedbacks.length} of {feedbacks.length} feedbacks
+          Showing {filteredFeedbacks.length} of {total} feedbacks
         </p>
 
         {/* Feedback List */}
@@ -484,6 +484,15 @@ export default function FeedbacksPage() {
               </Card>
             )}
           </div>
+        </div>
+        <div className="mt-4 flex justify-center">
+          {hasMore ? (
+            <Button onClick={loadMoreFeedbacks} isLoading={loadingMore} variant="secondary">
+              {loadingMore ? "Loading..." : "Load More"}
+            </Button>
+          ) : (
+            <p className="text-sm text-zinc-500">No more feedbacks to load</p>
+          )}
         </div>
       </div>
     </DashboardLayout>
