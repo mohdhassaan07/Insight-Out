@@ -52,30 +52,38 @@ export function LoadingSkeleton({ className = "" }: { className?: string }) {
 export function FeedbackSkeleton() {
   return (
     <>
-    <div className="px-6 py-4 space-y-3">
-      <LoadingSkeleton className="h-4 w-full" />
-      <LoadingSkeleton className="h-4 w-3/4" />
-      <div className="flex gap-2">
-        <LoadingSkeleton className="h-6 w-20 rounded-full" />
-        <LoadingSkeleton className="h-6 w-16 rounded-full" />
+      <div className="px-6 py-4 space-y-3">
+        <LoadingSkeleton className="h-4 w-full" />
+        <LoadingSkeleton className="h-4 w-3/4" />
+        <div className="flex gap-2">
+          <LoadingSkeleton className="h-6 w-20 rounded-full" />
+          <LoadingSkeleton className="h-6 w-16 rounded-full" />
+        </div>
       </div>
-    </div>
-    <div className="px-6 py-4 space-y-3">
-      <LoadingSkeleton className="h-4 w-full" />
-      <LoadingSkeleton className="h-4 w-3/4" />
-      <div className="flex gap-2">
-        <LoadingSkeleton className="h-6 w-20 rounded-full" />
-        <LoadingSkeleton className="h-6 w-16 rounded-full" />
+      <div className="px-6 py-4 space-y-3">
+        <LoadingSkeleton className="h-4 w-full" />
+        <LoadingSkeleton className="h-4 w-3/4" />
+        <div className="flex gap-2">
+          <LoadingSkeleton className="h-6 w-20 rounded-full" />
+          <LoadingSkeleton className="h-6 w-16 rounded-full" />
+        </div>
       </div>
-    </div>
-    <div className="px-6 py-4 space-y-3">
-      <LoadingSkeleton className="h-4 w-full" />
-      <LoadingSkeleton className="h-4 w-3/4" />
-      <div className="flex gap-2">
-        <LoadingSkeleton className="h-6 w-20 rounded-full" />
-        <LoadingSkeleton className="h-6 w-16 rounded-full" />
+      <div className="px-6 py-4 space-y-3">
+        <LoadingSkeleton className="h-4 w-full" />
+        <LoadingSkeleton className="h-4 w-3/4" />
+        <div className="flex gap-2">
+          <LoadingSkeleton className="h-6 w-20 rounded-full" />
+          <LoadingSkeleton className="h-6 w-16 rounded-full" />
+        </div>
       </div>
-    </div>
+      <div className="px-6 py-4 space-y-3">
+        <LoadingSkeleton className="h-4 w-full" />
+        <LoadingSkeleton className="h-4 w-3/4" />
+        <div className="flex gap-2">
+          <LoadingSkeleton className="h-6 w-20 rounded-full" />
+          <LoadingSkeleton className="h-6 w-16 rounded-full" />
+        </div>
+      </div>
     </>
   );
 }

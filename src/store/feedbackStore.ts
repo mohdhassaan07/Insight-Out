@@ -29,36 +29,48 @@ export const usefeedbackStore = create<FeedbackStore>((set, get) => ({
         if (get().feedbacks.length > 0) return;
         const { limit } = get();
         set({ loading: true, page: 1, hasMore: true });
-        const res = await axios.get("/api/v1/feedbacks", { params: { page: 1, limit: limit } });
+        try {
+            const res = await axios.get("/api/v1/feedbacks", { params: { page: 1, limit } });
 
-        set({
-            feedbacks: res.data.feedbacks,
-            loading: false,
-            page: res.data.page,
-            hasMore: res.data.hasMore,
-            total: res.data.total,
-        });
+            set({
+                feedbacks: res.data.feedbacks,
+                loading: false,
+                page: res.data.page,
+                hasMore: res.data.hasMore,
+                total: res.data.total,
+            });
+        } catch (error) {
+            console.error("Failed to fetch feedbacks", error);
+            set({ loading: false });
+            throw error;
+        }
     },
 
     loadMoreFeedbacks: async () => {
-    const { loadingMore, hasMore, page, limit } = get();
-    if (loadingMore || !hasMore) return;
+        const { loadingMore, hasMore, page, limit } = get();
+        if (loadingMore || !hasMore) return;
 
-    set({ loadingMore: true });
-    const nextPage = page + 1;
+        set({ loadingMore: true });
+        const nextPage = page + 1;
 
-    const res = await axios.get("/api/v1/feedbacks", {
-      params: { page: nextPage, limit },
-    });
+        try {
+            const res = await axios.get("/api/v1/feedbacks", {
+                params: { page: nextPage, limit },
+            });
 
-    set((state) => ({
-      feedbacks: [...state.feedbacks, ...res.data.feedbacks],
-      loadingMore: false,
-      page: res.data.page,
-      hasMore: res.data.hasMore,
-      total: res.data.total,
-    }));
-  },
+            set((state) => ({
+                feedbacks: [...state.feedbacks, ...res.data.feedbacks],
+                loadingMore: false,
+                page: res.data.page,
+                hasMore: res.data.hasMore,
+                total: res.data.total,
+            }));
+        } catch (error) {
+            console.error("Failed to load more feedbacks", error);
+            set({ loadingMore: false });
+            throw error;
+        }
+    },
 
     updateApprovestatus: (id) => {
         set((state) => ({

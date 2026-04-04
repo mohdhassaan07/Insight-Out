@@ -98,7 +98,9 @@ export default function FeedbacksPage() {
   });
 
   useEffect(() => {
-    fetchfeedbacks();
+    void fetchfeedbacks().catch((error) => {
+      console.error("Initial feedback fetch failed:", error);
+    });
   }, []);
 
   function startEditing() {
@@ -282,6 +284,15 @@ export default function FeedbacksPage() {
               )}
 
             </Card>
+            <div className="mt-4 flex justify-center">
+              {hasMore ? (
+                <Button onClick={loadMoreFeedbacks} isLoading={loadingMore} variant="secondary">
+                  {loadingMore ? "Loading..." : "Load More"}
+                </Button>
+              ) : (
+                <p className="text-sm text-zinc-500">No more feedbacks to load</p>
+              )}
+            </div>
           </div>
 
           {/* Detail Panel */}
@@ -485,15 +496,7 @@ export default function FeedbacksPage() {
             )}
           </div>
         </div>
-        <div className="mt-4 flex justify-center">
-          {hasMore ? (
-            <Button onClick={loadMoreFeedbacks} isLoading={loadingMore} variant="secondary">
-              {loadingMore ? "Loading..." : "Load More"}
-            </Button>
-          ) : (
-            <p className="text-sm text-zinc-500">No more feedbacks to load</p>
-          )}
-        </div>
+
       </div>
     </DashboardLayout>
   );
