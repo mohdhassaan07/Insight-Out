@@ -2,9 +2,10 @@ import prisma from "@/src/lib/prisma";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/src/lib/auth"
-
-export const dynamic = "force-dynamic";
+import { apiLimiter } from "@/src/lib/rateLimiter";
+export const dynamic = "force-dynamic"; // Ensure this route is always dynamic and doesn't get statically optimized
 export const revalidate = 0;
+
 
 export async function GET(req: Request) {
     try {
@@ -13,7 +14,11 @@ export async function GET(req: Request) {
         if (!session) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
-
+        const key = session.user.organizationId;
+        const { success } = await apiLimiter.limit(key);
+        if (!success) {
+            return NextResponse.json({ message: "Too many requests. Please try again later." }, { status: 429 });
+        }
         const organizationId = session.user?.organizationId;
         if (!organizationId) {
             return NextResponse.json(

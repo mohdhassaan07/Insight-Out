@@ -41,7 +41,8 @@ export const usefeedbackStore = create<FeedbackStore>((set, get) => ({
     total: 0,
 
     fetchFeedbacks: async () => {
-        const { limit } = get();
+        const { limit, feedbacks } = get();
+        if(feedbacks.length > 0) return; // avoid refetching if we already have data
         set({ loading: true, page: 1, hasMore: true });
         try {
             const res = await getFeedbackPage(1, limit);

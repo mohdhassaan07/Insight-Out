@@ -6,8 +6,8 @@ import prisma from "@/src/lib/prisma";
 import { v7 as uuidv7 } from "uuid";
 import { authOptions } from "@/src/lib/auth"
 import { getServerSession } from "next-auth";
-
-const MAX_FEEDBACKS_PER_UPLOAD = 500;
+import { uploadLimiter } from "@/src/lib/rateLimiter";
+const MAX_FEEDBACKS_PER_UPLOAD = 200;
 
 function preprocessFeedback(text: string): string {
     return text
@@ -93,6 +93,11 @@ async function classifyWithGemini(feedbacks: string[]) {
 
 export async function POST(req: Request) {
     try {
+        const ip = req.headers.get("x-forwarded-for") ?? "anonymous";
+        const { success } = await uploadLimiter.limit(ip);
+        if(!success) {
+            return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+        }
         const session = await getServerSession(authOptions);
         if (!session) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -162,14 +167,14 @@ export async function POST(req: Request) {
             // merge AI result + source
             classified.forEach((ai: any, index: number) => {
                 finalResults.push({
-                    id : uuidv7(),
+                    id: uuidv7(),
                     feedback_text: batch[index].feedback,
                     source: batch[index].source,
                     primary_category: ai.category,
                     confidence: ai.confidence,
                     sentiment: ai.sentiment,
-                    status : ai.confidence <0.85 ? "self_approved" : "auto_approved",
-                    organizationId : session?.user.organizationId
+                    status: ai.confidence < 0.85 ? "self_approved" : "auto_approved",
+                    organizationId: session?.user.organizationId
                 });
             });
         }
