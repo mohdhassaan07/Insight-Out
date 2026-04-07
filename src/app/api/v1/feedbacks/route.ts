@@ -3,6 +3,9 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/src/lib/auth"
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(req: Request) {
     try {
         const session = await getServerSession(authOptions);
@@ -23,15 +26,16 @@ export async function GET(req: Request) {
         const pageParam = Number(searchParams.get("page") ?? "1");
         const limitParam = Number(searchParams.get("limit") ?? "10");
         const page = Number.isFinite(pageParam) && pageParam > 0 ? Math.floor(pageParam) : 1;
-        const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.floor(limitParam) : 10;
+        const requestedLimit = Number.isFinite(limitParam) && limitParam > 0 ? Math.floor(limitParam) : 10;
+        const limit = Math.min(requestedLimit, 100);
         const skip = (page - 1) * limit;
 
         const where = { organizationId };
 
-        const [feedbacks, total] = await prisma.$transaction([
+        const [feedbacks, total] = await Promise.all([
             prisma.feedback.findMany({
                 where,
-                orderBy: { createdAt: "desc" },
+                orderBy: [{ createdAt: "desc" }, { id: "desc" }],
                 skip,
                 take: limit,
             }),

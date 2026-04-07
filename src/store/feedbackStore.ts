@@ -1,6 +1,21 @@
 import axios from 'axios';
 import { create } from 'zustand';
 
+async function getFeedbackPage(page: number, limit: number) {
+    const makeRequest = () =>
+        axios.get("/api/v1/feedbacks", {
+            params: { page, limit },
+            withCredentials: true,
+        });
+
+    try {
+        return await makeRequest();
+    } catch (error) {
+        // Retry once for transient failures (network hiccups / cold starts).
+        return await makeRequest();
+    }
+}
+
 type FeedbackStore = {
     feedbacks: Array<any>,
     loading: boolean,
@@ -26,11 +41,10 @@ export const usefeedbackStore = create<FeedbackStore>((set, get) => ({
     total: 0,
 
     fetchFeedbacks: async () => {
-        if (get().feedbacks.length > 0) return;
         const { limit } = get();
         set({ loading: true, page: 1, hasMore: true });
         try {
-            const res = await axios.get("/api/v1/feedbacks", { params: { page: 1, limit } });
+            const res = await getFeedbackPage(1, limit);
 
             set({
                 feedbacks: res.data.feedbacks,
@@ -41,8 +55,7 @@ export const usefeedbackStore = create<FeedbackStore>((set, get) => ({
             });
         } catch (error) {
             console.error("Failed to fetch feedbacks", error);
-            set({ loading: false });
-            throw error;
+            set({ loading: false, feedbacks: [], hasMore: false, total: 0, page: 1 });
         }
     },
 
@@ -54,21 +67,22 @@ export const usefeedbackStore = create<FeedbackStore>((set, get) => ({
         const nextPage = page + 1;
 
         try {
-            const res = await axios.get("/api/v1/feedbacks", {
-                params: { page: nextPage, limit },
-            });
+            const res = await getFeedbackPage(nextPage, limit);
+            const nextFeedbacks = Array.isArray(res.data.feedbacks) ? res.data.feedbacks : [];
+            const shouldHaveMore = nextFeedbacks.length > 0 && Boolean(res.data.hasMore);
 
             set((state) => ({
-                feedbacks: [...state.feedbacks, ...res.data.feedbacks],
+                feedbacks: [...state.feedbacks, ...nextFeedbacks].filter(
+                    (feedback, index, array) => array.findIndex((item) => item.id === feedback.id) === index
+                ),
                 loadingMore: false,
                 page: res.data.page,
-                hasMore: res.data.hasMore,
+                hasMore: shouldHaveMore,
                 total: res.data.total,
             }));
         } catch (error) {
             console.error("Failed to load more feedbacks", error);
             set({ loadingMore: false });
-            throw error;
         }
     },
 
