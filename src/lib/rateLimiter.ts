@@ -5,7 +5,7 @@ const redis = Redis.fromEnv();
 
 export const apiLimiter = new Ratelimit({
     redis,
-    limiter: Ratelimit.slidingWindow(200, "1 m"), // 200 requests per minute
+    limiter: Ratelimit.slidingWindow(100, "1 m"), // 200 requests per minute
     analytics: true
 })
 

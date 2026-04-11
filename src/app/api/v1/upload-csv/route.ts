@@ -98,6 +98,7 @@ export async function POST(req: Request) {
         if(!success) {
             return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
         }
+        
         const session = await getServerSession(authOptions);
         if (!session) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

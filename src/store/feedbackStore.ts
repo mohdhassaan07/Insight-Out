@@ -26,6 +26,7 @@ type FeedbackStore = {
     total: number;
     fetchFeedbacks: () => Promise<void>,
     loadMoreFeedbacks: () => Promise<void>,
+    fetchAllFeedbacks: () => Promise<void>,
     updateApprovestatus: (id: string) => void,
     updateCategory: (id: string, category: string) => void,
     updateFeedbackFields: (id: string, fields: { primary_category?: string; sentiment?: string; source?: string }) => void
@@ -42,7 +43,7 @@ export const usefeedbackStore = create<FeedbackStore>((set, get) => ({
 
     fetchFeedbacks: async () => {
         const { limit, feedbacks } = get();
-        if(feedbacks.length > 0) return; // avoid refetching if we already have data
+        if (feedbacks.length > 0) return; // avoid refetching if we already have data
         set({ loading: true, page: 1, hasMore: true });
         try {
             const res = await getFeedbackPage(1, limit);
@@ -84,6 +85,20 @@ export const usefeedbackStore = create<FeedbackStore>((set, get) => ({
         } catch (error) {
             console.error("Failed to load more feedbacks", error);
             set({ loadingMore: false });
+        }
+    },
+
+    fetchAllFeedbacks: async () => {
+        try {
+            set({ loading: true })
+            const res = await axios.get("/api/v1/fetchAllFeedbacks")
+            set({
+                feedbacks: res.data.feedbacks,
+                loading: false
+            })
+        } catch (error) {
+            console.error("Failed to fetch all feedbacks", error);
+            set({ loading: false, feedbacks: [] });
         }
     },
 

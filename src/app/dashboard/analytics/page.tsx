@@ -33,7 +33,7 @@ export default function AnalyticsPage() {
   const [categoryCounts, setcategoryCounts] = useState<Array<{ primary_category: string; _count: number }>>([]);
   const totalCategory = categoryData.reduce((acc, c) => acc + c.value, 0);
   const totalFeedbacks = usefeedbackStore(state => state.feedbacks.length);
-  const fetchFeedbacks = usefeedbackStore(state => state.fetchFeedbacks);
+  const fetchAllFeedbacks = usefeedbackStore(state => state.fetchAllFeedbacks);
   const loading = usefeedbackStore(state => state.loading);
   const feedbacks = usefeedbackStore(state => state.feedbacks);
 
@@ -42,7 +42,7 @@ export default function AnalyticsPage() {
       const res = await axios.get('/api/v1/getCategory');
       setcategoryCounts(res.data.categories);
     }
-    fetchFeedbacks();
+    fetchAllFeedbacks();
     fetchCategories();
   }, []);
 
