@@ -18,6 +18,7 @@ async function getFeedbackPage(page: number, limit: number) {
 
 type FeedbackStore = {
     feedbacks: Array<any>,
+    allFeedbacks: Array<any>,
     loading: boolean,
     loadingMore: boolean;
     page: number;
@@ -34,6 +35,7 @@ type FeedbackStore = {
 
 export const usefeedbackStore = create<FeedbackStore>((set, get) => ({
     feedbacks: [],
+    allFeedbacks: [],
     loading: false,
     loadingMore: false,
     page: 1,
@@ -93,12 +95,12 @@ export const usefeedbackStore = create<FeedbackStore>((set, get) => ({
             set({ loading: true })
             const res = await axios.get("/api/v1/fetchAllFeedbacks")
             set({
-                feedbacks: res.data.feedbacks,
+                allFeedbacks: res.data.feedbacks,
                 loading: false
             })
         } catch (error) {
             console.error("Failed to fetch all feedbacks", error);
-            set({ loading: false, feedbacks: [] });
+            set({ loading: false, allFeedbacks: [] });
         }
     },
 

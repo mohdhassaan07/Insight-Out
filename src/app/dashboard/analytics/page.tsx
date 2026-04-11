@@ -32,16 +32,17 @@ const topKeywords = [
 export default function AnalyticsPage() {
   const [categoryCounts, setcategoryCounts] = useState<Array<{ primary_category: string; _count: number }>>([]);
   const totalCategory = categoryData.reduce((acc, c) => acc + c.value, 0);
-  const totalFeedbacks = usefeedbackStore(state => state.feedbacks.length);
+  const totalFeedbacks = usefeedbackStore(state => state.allFeedbacks.length);
   const fetchAllFeedbacks = usefeedbackStore(state => state.fetchAllFeedbacks);
   const loading = usefeedbackStore(state => state.loading);
-  const feedbacks = usefeedbackStore(state => state.feedbacks);
+  const feedbacks = usefeedbackStore(state => state.allFeedbacks);
 
+  async function fetchCategories() {
+    const res = await axios.get('/api/v1/getCategory');
+    setcategoryCounts(res.data.categories);
+  }
+  
   useEffect(() => {
-    async function fetchCategories() {
-      const res = await axios.get('/api/v1/getCategory');
-      setcategoryCounts(res.data.categories);
-    }
     fetchAllFeedbacks();
     fetchCategories();
   }, []);
