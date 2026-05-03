@@ -75,6 +75,8 @@ function extractJSON(text: string) {
         .replace(/```/g, "")
         .trim();
 
+        
+
     return JSON.parse(cleaned);
 }
 

@@ -1,14 +1,26 @@
 "use client";
-
 import { useState } from "react";
 import Button from "./Button";
 import axios from "axios";
+import { usefeedbackStore } from "@/src/store/feedbackStore";
 
 export default function GenerateSummaryButton() {
     const [summary, setSummary] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isOpen, setIsOpen] = useState(false);
+    const { feedbacks } = usefeedbackStore();
+
+    function thisMonthFeedbackCount() {
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+        const thismonth = feedbacks.filter((feedback) => {
+            const createdAt = new Date(feedback.createdAt);
+            return createdAt.getMonth() === currentMonth && createdAt.getFullYear() === currentYear;
+        })
+        return thismonth.length;
+    }
 
     async function handleGenerate() {
         setIsLoading(true);
@@ -54,7 +66,7 @@ export default function GenerateSummaryButton() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             </button>
-                        </div>                   
+                        </div>
 
                         {error && (
                             <p className="text-red-500 text-sm py-2">{error}</p>
@@ -62,15 +74,18 @@ export default function GenerateSummaryButton() {
 
                         <div className="prose rmv-scrollbar flex justify-center items-center prose-sm dark:prose-invert text-justify outline-2 outline-indigo-500 min-h-70 rounded-md p-4 dark:bg-zinc-900 max-h-80 overflow-y-auto whitespace-pre-wrap text-zinc-700 dark:text-zinc-300">
                             {isLoading && (
-                            <div className="flex items-center justify-center py-12">
-                                <svg className="animate-spin h-8 w-8 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                </svg>
-                                <span className="ml-3 text-zinc-500">Generating summary...</span>
-                            </div>
-                        )}
-                            {summary}
+                                <div className="flex items-center justify-center py-12">
+                                    <svg className="animate-spin h-8 w-8 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                    </svg>
+                                    <span className="ml-3 text-zinc-500">Generating summary...</span>
+                                </div>
+                            )}
+                            {(thisMonthFeedbackCount() === 0 && !isLoading) ? (
+                                <p className="text-center text-zinc-500 py-12">No feedbacks submitted this month to summarize.</p>
+                            ) : summary}
+                            
                         </div>
 
                         {/* <div className="mt-4 flex justify-end">
