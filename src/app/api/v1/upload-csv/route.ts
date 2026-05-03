@@ -7,23 +7,8 @@ import { v7 as uuidv7 } from "uuid";
 import { authOptions } from "@/src/lib/auth"
 import { getServerSession } from "next-auth";
 import { uploadLimiter } from "@/src/lib/rateLimiter";
+
 const MAX_FEEDBACKS_PER_UPLOAD = 200;
-
-function preprocessFeedback(text: string): string {
-    return text
-        .replace(/http\S+/g, "")   // remove URLs
-        .replace(/[^\w\s.,!?]/g, "") // remove emojis/special chars
-        .trim()
-        .slice(0, 500); // prevent token abuse
-}
-
-function arrayChunks<T>(arr: T[], size: number): T[][] {
-    const chunks = [];
-    for (let i = 0; i < arr.length; i += size) {
-        chunks.push(arr.slice(i, i + size));
-    }
-    return chunks;
-}
 
 function buildPrompt(feedbacks: string[]) {
     const CATEGORIES = [
@@ -65,7 +50,6 @@ Format:
 Feedbacks:
 ${feedbacks.map((f, i) => `${i + 1}. ${f}`).join("\n")}
 `;
-
 }
 
 function extractJSON(text: string) {
@@ -74,8 +58,6 @@ function extractJSON(text: string) {
         .replace(/```json/g, "")
         .replace(/```/g, "")
         .trim();
-
-        
 
     return JSON.parse(cleaned);
 }
@@ -91,6 +73,29 @@ async function classifyWithGemini(feedbacks: string[]) {
     const text = result.response.text();
 
     return extractJSON(text);
+}
+
+async function classifyWithGroq(feedbacks: string[]) {
+    const { getGroqChatCompletion } = await import("../groqAi");
+    const response = await getGroqChatCompletion(feedbacks);
+    const text = response.choices[0]?.message?.content ?? "[]";
+    return extractJSON(text);
+}
+
+function preprocessFeedback(text: string): string {
+    return text
+        .replace(/http\S+/g, "")   // remove URLs
+        .replace(/[^\w\s.,!?]/g, "") // remove emojis/special chars
+        .trim()
+        .slice(0, 500); // prevent token abuse
+}
+
+function arrayChunks<T>(arr: T[], size: number): T[][] {
+    const chunks = [];
+    for (let i = 0; i < arr.length; i += size) {
+        chunks.push(arr.slice(i, i + size));
+    }
+    return chunks;
 }
 
 export async function POST(req: Request) {
@@ -165,7 +170,7 @@ export async function POST(req: Request) {
 
         for (const batch of batches) {
             const texts = batch.map(b => b.feedback); // only text to AI
-            const classified = await classifyWithGemini(texts);
+            const classified = await classifyWithGroq(texts);
 
             // merge AI result + source
             classified.forEach((ai: any, index: number) => {

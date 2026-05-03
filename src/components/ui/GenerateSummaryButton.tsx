@@ -9,18 +9,19 @@ export default function GenerateSummaryButton() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isOpen, setIsOpen] = useState(false);
-    const { feedbacks } = usefeedbackStore();
+    const { allFeedbacks } = usefeedbackStore();
 
     function thisMonthFeedbackCount() {
         const now = new Date();
         const currentMonth = now.getMonth();
         const currentYear = now.getFullYear();
-        const thismonth = feedbacks.filter((feedback) => {
+        const thismonth = allFeedbacks.filter((feedback) => {
             const createdAt = new Date(feedback.createdAt);
             return createdAt.getMonth() === currentMonth && createdAt.getFullYear() === currentYear;
         })
         return thismonth.length;
     }
+    
 
     async function handleGenerate() {
         setIsLoading(true);
