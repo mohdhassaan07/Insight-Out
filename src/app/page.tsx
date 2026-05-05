@@ -201,11 +201,11 @@ export default async function Home() {
                   </svg>
                 </div>
                 <span className="text-lg font-bold bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  Insight-Out
+                  Insights
                 </span>
               </div>
               <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                © 2026 Insight-Out. All rights reserved.
+                © 2026 Insights. All rights reserved.
               </p>
             </div>
           </div>

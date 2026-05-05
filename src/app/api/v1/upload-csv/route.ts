@@ -7,6 +7,8 @@ import { v7 as uuidv7 } from "uuid";
 import { authOptions } from "@/src/lib/auth"
 import { getServerSession } from "next-auth";
 import { uploadLimiter } from "@/src/lib/rateLimiter";
+import Groq from "groq-sdk";
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const MAX_FEEDBACKS_PER_UPLOAD = 200;
 
@@ -75,8 +77,22 @@ async function classifyWithGemini(feedbacks: string[]) {
     return extractJSON(text);
 }
 
+// using groqAi
+function getGroqChatCompletion(feedbacks: string[]) {
+  const prompt = buildPrompt(feedbacks);
+
+  return groq.chat.completions.create({
+    messages: [
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+    model: "openai/gpt-oss-20b",
+  });
+}
+
 async function classifyWithGroq(feedbacks: string[]) {
-    const { getGroqChatCompletion } = await import("../groqAi");
     const response = await getGroqChatCompletion(feedbacks);
     const text = response.choices[0]?.message?.content ?? "[]";
     return extractJSON(text);
