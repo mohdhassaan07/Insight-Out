@@ -3,6 +3,9 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { Parser } from "json2csv";
 import prisma from "@/src/lib/prisma";
+import { exportLimiter } from "@/src/lib/rateLimiter";
+export const dynamic = "force-dynamic";
+
 export async function GET(req: Request) {
     try {
         const session = await getServerSession(authOptions);
@@ -11,6 +14,15 @@ export async function GET(req: Request) {
             return NextResponse.json(
                 { error: "Unauthorized" },
                 { status: 401 }
+            );
+        }
+
+        const ip = req.headers.get("x-forwarded-for") ?? "anonymous";
+        const { success } = await exportLimiter.limit(ip);
+        if (!success) {
+            return NextResponse.json(
+                { error: "Too many requests. Please try again later." },
+                { status: 429 }
             );
         }
 

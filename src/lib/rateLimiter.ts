@@ -13,3 +13,8 @@ export const uploadLimiter = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(20, "1 h")
 });
+
+export const exportLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, "1 h")
+});
