@@ -9,13 +9,13 @@ export default function GenerateSummaryButton() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isOpen, setIsOpen] = useState(false);
-    const { allFeedbacks } = usefeedbackStore();
+    const { feedbacks } = usefeedbackStore();
 
     function thisMonthFeedbackCount() {
         const now = new Date();
         const currentMonth = now.getMonth();
         const currentYear = now.getFullYear();
-        const thismonth = allFeedbacks.filter((feedback) => {
+        const thismonth = feedbacks.filter((feedback) => {
             const createdAt = new Date(feedback.createdAt);
             return createdAt.getMonth() === currentMonth && createdAt.getFullYear() === currentYear;
         })
@@ -54,7 +54,7 @@ export default function GenerateSummaryButton() {
 
             {isOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl max-w-lg w-full mx-4 p-6">
+                    <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl max-w-xl w-full mx-4 p-6">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">
                                 AI-Generated Summary
@@ -73,7 +73,7 @@ export default function GenerateSummaryButton() {
                             <p className="text-red-500 text-sm py-2">{error}</p>
                         )}
 
-                        <div className="prose rmv-scrollbar flex justify-center items-center prose-sm dark:prose-invert text-justify outline-2 outline-indigo-500 min-h-70 rounded-md p-4 dark:bg-zinc-900 max-h-80 overflow-y-auto whitespace-pre-wrap text-zinc-700 dark:text-zinc-300">
+                        <div className="prose rmv-scrollbar flex justify-center items-center prose-sm dark:prose-invert text-justify outline-2 outline-indigo-500 min-h-70 rounded-md p-2 dark:bg-zinc-900 max-h-80 overflow-y-auto whitespace-pre-wrap text-zinc-700 dark:text-zinc-300">
                             {isLoading && (
                                 <div className="flex items-center justify-center py-12">
                                     <svg className="animate-spin h-8 w-8 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -83,10 +83,11 @@ export default function GenerateSummaryButton() {
                                     <span className="ml-3 text-zinc-500">Generating summary...</span>
                                 </div>
                             )}
-                            {(thisMonthFeedbackCount() === 0 && !isLoading) ? (
+                            {/* {(thisMonthFeedbackCount() === 0 && !isLoading) ? (
                                 <p className="text-center text-zinc-500 py-12">No feedbacks submitted this month to summarize.</p>
-                            ) : summary}
-                            
+                            ) : summary} */}
+                            <p className="m-3">{summary}</p>
+                        
                         </div>
 
                         {/* <div className="mt-4 flex justify-end">

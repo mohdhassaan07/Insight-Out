@@ -46,7 +46,7 @@ export default function SignInPage() {
               </svg>
             </div>
             <span className="text-2xl font-bold bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              Insight-Out
+              Insights
             </span>
           </Link>
         </div>

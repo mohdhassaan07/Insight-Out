@@ -3,6 +3,9 @@ import prisma from "@/src/lib/prisma";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
+import Groq from "groq-sdk";
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
 
 function buildPrompt(feedbacks: string[]) {
     return `You are an AI assistant that analyzes customer feedback.
@@ -13,7 +16,7 @@ Rules:
 - Write a clear and professional summary.
 - Focus on insights, not individual feedback.
 - Identify common issues, positive points, and trends.
-- Keep the summary between 80–120 words.
+- Keep the summary between 120–150 words.
 - Use bullet points.
 - Do not repeat the same idea.
 - Do not mention individual users.
@@ -40,6 +43,26 @@ async function generateSummarywithAI(feedbacks: string[]) {
     return result.response.text();
 }
 
+// using groqAi
+function getGroqChatCompletion(feedbacks: string[]) {
+  const prompt = buildPrompt(feedbacks);
+
+  return groq.chat.completions.create({
+    messages: [
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+    model: "openai/gpt-oss-20b",
+  });
+}
+
+async function generateSummarywithGroq(feedbacks: string[]) {
+    const response = await getGroqChatCompletion(feedbacks);
+    return response.choices[0]?.message?.content ?? "No summary generated.";
+}
+
 export async function GET(req: Request) {
     const session = await getServerSession(authOptions);
     if (!session) {
@@ -56,8 +79,11 @@ export async function GET(req: Request) {
                 }
             }
         })
+        if(feedbacks.length === 0) {
+            return NextResponse.json({ summary: "No feedbacks submitted this month to summarize." });
+        }
         const feedbackTexts = feedbacks.map(f => f.feedback_text);
-        const summary = await generateSummarywithAI(feedbackTexts);
+        const summary = await generateSummarywithGroq(feedbackTexts);
         return NextResponse.json({ summary });
     } catch (error) {
         return NextResponse.json({error }, { status: 500 });
