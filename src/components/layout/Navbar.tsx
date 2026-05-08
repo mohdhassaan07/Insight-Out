@@ -17,7 +17,7 @@ export default function Navbar() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <span className="text-xl font-bold bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="text-2xl italic font-serif bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
               Insights
             </span>
           </Link>
@@ -30,7 +30,7 @@ export default function Navbar() {
             <Link href="#pricing" className="text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">
               Pricing
             </Link>
-            <Link href="#about" className="text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">
+            <Link href="#CTA" className="text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors">
               About
             </Link>
           </div>
