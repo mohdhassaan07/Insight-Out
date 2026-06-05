@@ -91,6 +91,8 @@ export const usefeedbackStore = create<FeedbackStore>((set, get) => ({
     },
 
     fetchAllFeedbacks: async () => {
+        const { allFeedbacks } = get();
+        if (allFeedbacks.length > 0) return; // avoid refetching if we already have data
         try {
             set({ loading: true })
             const res = await axios.get("/api/v1/fetchAllFeedbacks")

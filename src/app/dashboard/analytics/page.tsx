@@ -31,7 +31,7 @@ const topKeywords = [
 
 export default function AnalyticsPage() {
   const [categoryCounts, setcategoryCounts] = useState<Array<{ primary_category: string; _count: number }>>([]);
-  const totalCategory = categoryData.reduce((acc, c) => acc + c.value, 0);
+  // const totalCategory = categoryData.reduce((acc, c) => acc + c.value, 0);
   const totalFeedbacks = usefeedbackStore(state => state.allFeedbacks.length);
   const fetchAllFeedbacks = usefeedbackStore(state => state.fetchAllFeedbacks);
   const loading = usefeedbackStore(state => state.loading);
@@ -171,7 +171,6 @@ export default function AnalyticsPage() {
       color: colorMap[cat.primary_category] || "bg-zinc-500",
     };
   }).sort((a, b) => b.count - a.count);
-
 
   return (
     <DashboardLayout>
