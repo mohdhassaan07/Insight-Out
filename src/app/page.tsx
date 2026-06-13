@@ -320,7 +320,7 @@ export default async function Home() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
-                    <span className="text-2xl font-serif italic text-zinc-900 dark:text-zinc-200">Insights</span>
+                    <span className="text-2xl font-serif italic text-zinc-900 dark:text-zinc-200">Insight-Out</span>
                   </div>
                   <p className="text-sm text-zinc-500 dark:text-zinc-500 font-light max-w-xs leading-relaxed">
                     Transforming unstructured customer feedback into actionable product decisions through artificial intelligence.
@@ -348,7 +348,7 @@ export default async function Home() {
 
               <div className="pt-8 border-t border-zinc-200 dark:border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
                 <div className="text-[10px] text-zinc-400 dark:text-zinc-600 font-mono tracking-widest uppercase">
-                  © 2026 Insights. All rights reserved.
+                  © 2026 Insight-Out. All rights reserved.
                 </div>
                 <div className="flex gap-5">
                   <a href="#" className="text-zinc-400 hover:text-zinc-900 dark:text-zinc-600 dark:hover:text-zinc-300 transition-colors">

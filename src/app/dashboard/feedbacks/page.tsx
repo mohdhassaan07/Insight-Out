@@ -165,6 +165,8 @@ export default function FeedbacksPage() {
   }
 
   function handleExport() {
+    const confirmExport = window.confirm("Are you sure you want to export all feedbacks as a CSV file?");
+    if (!confirmExport) return;
     window.location.href =
       "/api/v1/export-csv";
   }

@@ -81,7 +81,7 @@ export default function Sidebar() {
               </svg>
             </div>
             <span className="text-2xl italic font-serif bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              Insights
+              Insight-Out
             </span>
         </Link>
       </div>
@@ -137,7 +137,7 @@ export default function Sidebar() {
             </Link>
             <div className="border-t border-zinc-200 dark:border-zinc-800" />
             <button
-              onClick={() => { setMenuOpen(false); signOut({ callbackUrl: "/signin" }); }}
+              onClick={() => { setMenuOpen(false); signOut({ callbackUrl: "/" }); }}
               className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors w-full"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

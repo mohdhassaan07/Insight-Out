@@ -6,6 +6,7 @@ declare module "next-auth" {
             name: string;
             email: string;
             organizationId: string;
+            profilePic: string;
             role: string;
             organizationName: string;
         };
@@ -14,6 +15,7 @@ declare module "next-auth" {
         organizationId: string;
         role: string;
         organizationName: string;
+        profilePic: string;
     }
 }
 

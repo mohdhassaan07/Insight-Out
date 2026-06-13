@@ -4,16 +4,48 @@ import Card, { CardContent, CardHeader } from "@/src/components/ui/Card";
 import Button from "@/src/components/ui/Button";
 import Input from "@/src/components/ui/Input";
 import Badge from "@/src/components/ui/Badge";
+import axios, { AxiosError } from "axios";
 import { useSession } from "next-auth/react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+type UpdateProfileResponse = {
+  message: string;
+  user: {
+    name: string | null;
+    profilePic: string | null;
+  };
+  organization: {
+    name: string | null;
+  };
+};
+
 export default function SettingsPage() {
-  const session = useSession();
+  const { data: session } = useSession();
   const [formData, setformData] = useState({
-    name: `${session.data?.user.name}`,
-    organizationName: `${session.data?.user.organizationName}`,
+    name: "",
+    organizationName: "",
+    profilePic: ""
   })
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!session?.user) return;
+
+    setformData({
+      name: session.user.name || "",
+      organizationName: session.user.organizationName || "",
+      profilePic: session.user.profilePic || ""
+    });
+    
+    if (session.user.profilePic) {
+      setAvatarUrl(session.user.profilePic);
+    }
+  }, [session]);
   
   const handlechange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
@@ -30,6 +62,7 @@ export default function SettingsPage() {
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setAvatarFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setAvatarUrl(reader.result as string);
@@ -38,6 +71,38 @@ export default function SettingsPage() {
     }
   }
 
+  const handleSaveChanges = async () => {
+    try {
+      setIsSaving(true);
+      setSaveMessage(null);
+      setSaveError(null);
+
+      const payload = new FormData();
+      payload.append("name", formData.name);
+      payload.append("organizationName", formData.organizationName);
+      if (avatarFile) {
+        payload.append("profilePic", avatarFile);
+      }
+
+      const response = await axios.put<UpdateProfileResponse>("/api/v1/updateProfile", payload);
+
+      setformData({
+        name: response.data.user.name || "",
+        organizationName: response.data.organization.name || "",
+        profilePic: response.data.user.profilePic || ""
+      });
+      setAvatarFile(null);
+      if (response.data.user.profilePic) {
+        setAvatarUrl(response.data.user.profilePic);
+      }
+      setSaveMessage(response.data.message);
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string }>;
+      setSaveError(axiosError.response?.data?.error || "Failed to save changes");
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   return (
     <DashboardLayout>
@@ -82,10 +147,12 @@ export default function SettingsPage() {
               </div>
               <div className="grid md:grid-cols-2 gap-4">
                 <Input label="Full Name" placeholder="John Doe" name="name" onChange={handlechange} value={formData.name} />
-                <Input label="Email" type="email" placeholder={`${session.data?.user.email}`} disabled />
+                <Input label="Email" type="email" placeholder={`${session?.user.email}`} disabled />
               </div>
+              {saveError && <p className="text-sm text-red-500">{saveError}</p>}
+              {saveMessage && <p className="text-sm text-emerald-600 dark:text-emerald-400">{saveMessage}</p>}
               <div className="pt-2">
-                <Button>Save Changes</Button>
+                <Button onClick={handleSaveChanges} isLoading={isSaving}>Save Changes</Button>
               </div>
             </CardContent>
           </Card>
@@ -109,7 +176,7 @@ export default function SettingsPage() {
                 </div>
               </div>
               <div className="pt-2">
-                <Button>Save Changes</Button>
+                <Button onClick={handleSaveChanges} isLoading={isSaving}>Save Changes</Button>
               </div>
             </CardContent>
           </Card>
@@ -134,7 +201,7 @@ export default function SettingsPage() {
           </Card>
 
           {/* API Settings */}
-          <Card>
+          {/* <Card>
             <CardHeader>
               <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
                 API Access
@@ -160,7 +227,7 @@ export default function SettingsPage() {
                 Use this API key to authenticate requests to the Insight-Out API. Keep it secret!
               </p>
             </CardContent>
-          </Card>
+          </Card> */}
 
           {/* Danger Zone */}
           <Card className="border-red-200 dark:border-red-900">

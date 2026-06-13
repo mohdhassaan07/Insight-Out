@@ -44,6 +44,7 @@ export const authOptions: NextAuthOptions = {
                     id: user.id,
                     name: user.name,
                     email: user.email,
+                    profilePic: user.profilePic ?? "",
                     organizationId: user.organizationId,
                     role: user.role,
                     organizationName: organization?.name || "Unknown Organization"
@@ -57,6 +58,7 @@ export const authOptions: NextAuthOptions = {
                 token.name = user.name;
                 token.organizationId = user.organizationId;
                 token.role = user.role;
+                token.profilePic = user.profilePic as string;
                 token.organizationName = user.organizationName;
             }
             return token;
@@ -65,6 +67,7 @@ export const authOptions: NextAuthOptions = {
             session.user.name = token.name as string;
             session.user.organizationId = token.organizationId as string;
             session.user.role = token.role as string;
+            session.user.profilePic = token.profilePic as string;
             session.user.organizationName = token.organizationName as string;
             return session;
         }

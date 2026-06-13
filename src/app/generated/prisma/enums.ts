@@ -48,10 +48,3 @@ export const Sentiments = {
 } as const
 
 export type Sentiments = (typeof Sentiments)[keyof typeof Sentiments]
-
-
-export const Role = {
-  Admin: 'Admin'
-} as const
-
-export type Role = (typeof Role)[keyof typeof Role]

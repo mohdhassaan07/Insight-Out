@@ -438,7 +438,7 @@ export default async function Dashboard() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-zinc-900 dark:text-white">View Analytics</p>
-                    <p className="text-xs text-zinc-500">Explore trends and insights</p>
+                    <p className="text-xs text-zinc-500">Explore trends and Insight-Out</p>
                   </div>
                 </Link>
                 <Link href="/dashboard/settings" className="flex items-center gap-3 p-3 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
