@@ -7,7 +7,7 @@ import Badge from "@/src/components/ui/Badge";
 import axios, { AxiosError } from "axios";
 import { useSession } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
-
+import { useToast } from "@/src/components/providers/ToastProvider";
 type UpdateProfileResponse = {
   message: string;
   user: {
@@ -20,6 +20,7 @@ type UpdateProfileResponse = {
 };
 
 export default function SettingsPage() {
+  const { showToast } = useToast();
   const { data: session } = useSession();
   const [formData, setformData] = useState({
     name: "",
@@ -29,9 +30,15 @@ export default function SettingsPage() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [passwords, setPasswords] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
 
   useEffect(() => {
     if (!session?.user) return;
@@ -41,24 +48,28 @@ export default function SettingsPage() {
       organizationName: session.user.organizationName || "",
       profilePic: session.user.profilePic || ""
     });
-    
+
     if (session.user.profilePic) {
       setAvatarUrl(session.user.profilePic);
     }
   }, [session]);
-  
+
   const handlechange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
-    setformData((prev)=>({
+    setformData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }))
+    setPasswords((prev) => ({
       ...prev,
       [e.target.name]: e.target.value
     }))
   }
-  
+
   const changeAvatar = () => {
     fileInputRef.current?.click();
   }
-  
+
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -104,6 +115,37 @@ export default function SettingsPage() {
     }
   }
 
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      setIsUpdatingPassword(true);
+      if (passwords.newPassword !== passwords.confirmPassword) {
+        showToast("New password and confirm password do not match", "error");
+        return;
+      }
+
+      const res = await axios.post("/api/v1/upadatePassword", {
+        currentPassword: passwords.currentPassword,
+        newPassword: passwords.newPassword
+      });
+      if (res.status === 200) {
+        showToast("Password updated successfully", "success");
+      }
+      setPasswords({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+      });
+
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string }>;
+      showToast(axiosError.response?.data?.error || "Failed to update password", "error");
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  }
+
   return (
     <DashboardLayout>
       <div className="p-8 max-w-4xl">
@@ -136,12 +178,12 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <Button variant="outline" onClick={changeAvatar} size="sm">Change Avatar</Button>
-                  <input 
-                    type="file" 
+                  <input
+                    type="file"
                     ref={fileInputRef}
                     accept="image/*"
                     onChange={handleAvatarChange}
-                    hidden 
+                    hidden
                   />
                 </div>
               </div>
@@ -189,45 +231,16 @@ export default function SettingsPage() {
               </h2>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Input label="Current Password" type="password" placeholder="••••••••" />
+              <Input label="Current Password" type="password" name="currentPassword" onChange={handlechange} value={passwords.currentPassword} placeholder="••••••••" />
               <div className="grid md:grid-cols-2 gap-4">
-                <Input label="New Password" type="password" placeholder="••••••••" />
-                <Input label="Confirm Password" type="password" placeholder="••••••••" />
+                <Input label="New Password" name="newPassword" onChange={handlechange} value={passwords.newPassword} type="password" placeholder="••••••••" />
+                <Input label="Confirm Password" name="confirmPassword" onChange={handlechange} value={passwords.confirmPassword} type="password" placeholder="••••••••" />
               </div>
               <div className="pt-2">
-                <Button>Update Password</Button>
+                <Button isLoading={isUpdatingPassword} onClick={handlePasswordUpdate}>Update Password</Button>
               </div>
             </CardContent>
           </Card>
-
-          {/* API Settings */}
-          {/* <Card>
-            <CardHeader>
-              <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
-                API Access
-              </h2>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
-                  API Key
-                </label>
-                <div className="flex gap-2">
-                  <input 
-                    type="text" 
-                    value="sk-••••••••••••••••••••••••••••" 
-                    readOnly
-                    className="flex-1 px-4 py-2.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg text-zinc-600 dark:text-zinc-400 font-mono text-sm"
-                  />
-                  <Button variant="outline">Copy</Button>
-                  <Button variant="outline">Regenerate</Button>
-                </div>
-              </div>
-              <p className="text-sm text-zinc-500">
-                Use this API key to authenticate requests to the Insight-Out API. Keep it secret!
-              </p>
-            </CardContent>
-          </Card> */}
 
           {/* Danger Zone */}
           <Card className="border-red-200 dark:border-red-900">
