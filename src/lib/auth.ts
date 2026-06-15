@@ -56,6 +56,7 @@ export const authOptions: NextAuthOptions = {
         jwt({ token, user }) {
             if (user) {
                 token.name = user.name;
+                token.email = user.email;
                 token.organizationId = user.organizationId;
                 token.role = user.role;
                 token.profilePic = user.profilePic as string;
@@ -65,6 +66,7 @@ export const authOptions: NextAuthOptions = {
         },
         session({ session, token }) {
             session.user.name = token.name as string;
+            session.user.email = token.email as string;
             session.user.organizationId = token.organizationId as string;
             session.user.role = token.role as string;
             session.user.profilePic = token.profilePic as string;

@@ -153,14 +153,14 @@ export default function Sidebar() {
           className="flex items-center gap-3 px-3 py-2 w-full rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
         >
           <div className="w-9 h-9 rounded-full bg-linear-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-medium text-sm">
-            {session?.user?.email?.charAt(0).toUpperCase() || "U"}
+            {session?.user?.name?.charAt(0).toUpperCase() || "U"}
           </div>
           <div className="flex-1 min-w-0 text-left">
             <p className="text-sm font-medium text-zinc-900 dark:text-white truncate">
               {session?.user?.name || "User"}
             </p>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
-              {session?.user?.email || "user@example.com"}
+              {session?.user?.role || "Admin"}
             </p>
           </div>
           <svg className={`w-4 h-4 text-zinc-400 transition-transform ${menuOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -12,7 +12,7 @@ export default function SignUpPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [organizationName, setOrganizationName] = useState("");
+  const [orgName, setOrganizationName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -37,7 +37,7 @@ export default function SignUpPage() {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, organizationName }),
+        body: JSON.stringify({ name, email, password, orgName }),
       });
 
       const data = await res.json();
@@ -105,7 +105,7 @@ export default function SignUpPage() {
                 label="Organization Name"
                 type="text"
                 placeholder="Acme Inc."
-                value={organizationName}
+                value={orgName}
                 onChange={(e) => setOrganizationName(e.target.value)}
                 required
                 icon={

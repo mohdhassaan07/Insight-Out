@@ -13,6 +13,7 @@ export async function POST(req: NextRequest) {
             password: z.string().min(3).max(30),
         })
         const parsedBody = reqBody.safeParse(body);
+        console.log("Parsed Body:", parsedBody);
         if (!parsedBody.success) {
             return NextResponse.json({ error: "Invalid Input format" }, { status: 400 });
         }
