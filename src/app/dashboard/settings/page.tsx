@@ -29,7 +29,7 @@ export default function SettingsPage() {
   })
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
+  const [savingSection, setSavingSection] = useState<"profile" | "organization" | null>(null);
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -82,11 +82,9 @@ export default function SettingsPage() {
     }
   }
 
-  const handleSaveChanges = async () => {
+  const handleSaveChanges = async (section: "profile" | "organization") => {
     try {
-      setIsSaving(true);
-      setSaveMessage(null);
-      setSaveError(null);
+      setSavingSection(section);
 
       const payload = new FormData();
       payload.append("name", formData.name);
@@ -106,12 +104,14 @@ export default function SettingsPage() {
       if (response.data.user.profilePic) {
         setAvatarUrl(response.data.user.profilePic);
       }
-      setSaveMessage(response.data.message);
+      if (response.status === 200) {
+        showToast(response.data.message, "success");
+      }
     } catch (error) {
       const axiosError = error as AxiosError<{ error?: string }>;
-      setSaveError(axiosError.response?.data?.error || "Failed to save changes");
+      showToast(axiosError.response?.data?.error || "Failed to save changes", "error");
     } finally {
-      setIsSaving(false);
+      setSavingSection(null);
     }
   }
 
@@ -194,7 +194,7 @@ export default function SettingsPage() {
               {saveError && <p className="text-sm text-red-500">{saveError}</p>}
               {saveMessage && <p className="text-sm text-emerald-600 dark:text-emerald-400">{saveMessage}</p>}
               <div className="pt-2">
-                <Button onClick={handleSaveChanges} isLoading={isSaving}>Save Changes</Button>
+                <Button onClick={() => handleSaveChanges("profile")} isLoading={savingSection === "profile"}>Save Changes</Button>
               </div>
             </CardContent>
           </Card>
@@ -218,7 +218,7 @@ export default function SettingsPage() {
                 </div>
               </div>
               <div className="pt-2">
-                <Button onClick={handleSaveChanges} isLoading={isSaving}>Save Changes</Button>
+                <Button onClick={() => handleSaveChanges("organization")} isLoading={savingSection === "organization"}>Save Changes</Button>
               </div>
             </CardContent>
           </Card>

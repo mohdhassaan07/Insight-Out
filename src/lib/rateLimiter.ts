@@ -18,3 +18,8 @@ export const exportLimiter = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(10, "1 h")
 });
+
+export const passwordUpdateLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(2, "24 h")
+});

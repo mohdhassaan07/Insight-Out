@@ -8,6 +8,7 @@ interface ToastMessage {
   id: string;
   message: string;
   type: ToastType;
+  closing?: boolean;
 }
 
 interface ToastContextType {
@@ -19,15 +20,25 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined);
 export const ToastProvider = ({ children }: { children: ReactNode }) => {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
-  const showToast = useCallback((message: string, type: ToastType = "info") => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, message, type }]);
-
-    // Automatically remove toast after 5 seconds
+  const removeToast = useCallback((id: string) => {
+    setToasts((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, closing: true } : t))
+    );
+    // Remove element completely after animation completes (300ms)
     setTimeout(() => {
       setToasts((prev) => prev.filter((toast) => toast.id !== id));
-    }, 5000); 
+    }, 300);
   }, []);
+
+  const showToast = useCallback((message: string, type: ToastType = "info") => {
+    const id = Math.random().toString(36).substring(2, 9);
+    setToasts((prev) => [...prev, { id, message, type, closing: false }]);
+
+    // Automatically trigger exit animation after 5 seconds
+    setTimeout(() => {
+      removeToast(id);
+    }, 5000); 
+  }, [removeToast]);
 
   return (
     <ToastContext.Provider value={{ showToast }}>
@@ -36,7 +47,9 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`px-4 py-3 min-w-62.5 rounded-md shadow-lg text-white font-medium flex items-center justify-between transition-all duration-300 transform opacity-100 translate-y-0 ${
+            className={`px-4 py-3 min-w-62.5 rounded-md shadow-lg text-white font-medium flex items-center justify-between ${
+              toast.closing ? "animate-slide-out-right" : "animate-slide-in-right"
+            } ${
               toast.type === "success"
                 ? "bg-green-600"
                 : toast.type === "error"
@@ -49,7 +62,7 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
           >
             <span>{toast.message}</span>
             <button 
-              onClick={() => setToasts((prev) => prev.filter((t) => t.id !== toast.id))}
+              onClick={() => removeToast(toast.id)}
               className="ml-4 text-white hover:text-gray-200 focus:outline-none"
               aria-label="Close"
             >

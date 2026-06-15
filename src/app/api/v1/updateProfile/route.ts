@@ -144,7 +144,7 @@ export async function PUT(req: NextRequest) {
             return NextResponse.json({ error: "No fields to update" }, { status: 400 });
         }
 
-        const [user, organization] = await prisma.$transaction([
+        const [user, organization] = await Promise.all([
             Object.keys(userData).length > 0
                 ? prisma.user.update({
                     where: { email: session.user.email },
@@ -207,6 +207,6 @@ export async function PUT(req: NextRequest) {
         }
         
         console.error("Profile update error:", error);
-        return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to update profile" }, { status: 500 });
+        return NextResponse.json({ error:"Failed to update profile" }, { status: 500 });
     }
 }
