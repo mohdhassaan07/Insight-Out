@@ -2,9 +2,9 @@ import { Redis } from "@upstash/redis";
 import crypto from "crypto";
 
 const redis = Redis.fromEnv();
-
+//TTL = time to live
 const OTP_TTL_SECONDS = 300;
-const OTP_COOLDOWN_SECONDS = 10;
+const OTP_COOLDOWN_SECONDS = 60;
 const MAX_ATTEMPTS = 50;
 
 const hashOtp = (otp: string) =>
@@ -32,6 +32,11 @@ export async function createOtp(email: string) {
     await redis.set(cooldownKey(email), "1", { ex: OTP_COOLDOWN_SECONDS });
 
     return otp;
+}
+
+export async function getOtpCooldownRemaining(email: string) {
+    const ttl = await redis.ttl(cooldownKey(email));
+    return ttl > 0 ? ttl : 0;
 }
 
 export async function verifyOtp(email: string, otp: string) {

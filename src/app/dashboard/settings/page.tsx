@@ -5,9 +5,12 @@ import Button from "@/src/components/ui/Button";
 import Input from "@/src/components/ui/Input";
 import Badge from "@/src/components/ui/Badge";
 import axios, { AxiosError } from "axios";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/src/components/providers/ToastProvider";
+
+const OTP_RESEND_SECONDS = 60;
+
 type UpdateProfileResponse = {
   message: string;
   user: {
@@ -34,6 +37,13 @@ export default function SettingsPage() {
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [otpResendTimer, setOtpResendTimer] = useState(0);
+
   const [passwords, setPasswords] = useState({
     currentPassword: "",
     newPassword: "",
@@ -53,6 +63,16 @@ export default function SettingsPage() {
       setAvatarUrl(session.user.profilePic);
     }
   }, [session]);
+
+  useEffect(() => {
+    if (!isDeleteModalOpen || otpResendTimer <= 0) return;
+
+    const interval = window.setInterval(() => {
+      setOtpResendTimer((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    return () => window.clearInterval(interval);
+  }, [isDeleteModalOpen, otpResendTimer]);
 
   const handlechange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
@@ -145,6 +165,68 @@ export default function SettingsPage() {
       setIsUpdatingPassword(false);
     }
   }
+
+  const sendDeleteOtp = async () => {
+    try {
+      setIsSendingOtp(true);
+      const response = await axios.post<{ message: string }>("/api/v1/send-otp");
+
+      if (response.status === 200) {
+        setOtpResendTimer(OTP_RESEND_SECONDS);
+        showToast("OTP sent to your email", "success");
+      }
+
+      return true;
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string; retryAfter?: number }>;
+      const retryAfter = axiosError.response?.data?.retryAfter;
+
+      if (typeof retryAfter === "number" && retryAfter > 0) {
+        setOtpResendTimer(retryAfter);
+      }
+
+      showToast(axiosError.response?.data?.error || "Failed to send OTP", "error");
+      return false;
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  const handleDeleteAccountClick = async () => {
+    if (window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+      setOtp("");
+      setIsDeleteModalOpen(true);
+      const isOtpSent = await sendDeleteOtp();
+      if (!isOtpSent) {
+        setIsDeleteModalOpen(false);
+      }
+    }
+  };
+
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setOtp("");
+  };
+
+  const handleVerifyAndDelete = async () => {
+    if (!otp) {
+      showToast("Please enter the OTP", "error");
+      return;
+    }
+    try {
+      setIsDeleting(true);
+      const res = await axios.post("/api/v1/deleteAccount", { otp });
+      if (res.status === 200) {
+        showToast("Account deleted successfully", "success");
+        signOut({ callbackUrl: "/" });
+      }
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string }>;
+      showToast(axiosError.response?.data?.error || "Failed to delete account", "error");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -257,12 +339,51 @@ export default function SettingsPage() {
                     Permanently delete your account and all data
                   </p>
                 </div>
-                <Button variant="danger">Delete Account</Button>
+                <Button variant="danger" onClick={handleDeleteAccountClick}>Delete Account</Button>
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
+
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md p-6 border border-zinc-200 dark:border-zinc-800 animate-in fade-in zoom-in-95 duration-200">
+            <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">Delete Account</h3>
+            <p className="text-zinc-600 dark:text-zinc-400 text-sm mb-6">
+              Enter the otp send to your email to confirm account deletion. This action cannot be undone.
+            </p>
+            <div className="mb-6">
+              <Input
+                label="OTP Verification"
+                placeholder="Enter 6-digit OTP"
+                value={otp}
+                min={100000}
+                type="number"
+                onChange={(e) => setOtp(e.target.value)}
+              />
+            </div>
+            <div className="mb-6 flex items-center justify-between gap-3 rounded-lg bg-zinc-50 px-4 py-3 text-sm text-zinc-600 dark:bg-zinc-800/80 dark:text-zinc-300">
+              <span>
+                {otpResendTimer > 0 ? `Resend OTP in ${otpResendTimer}s` : "Didn't receive the OTP?"}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                isLoading={isSendingOtp}
+                disabled={otpResendTimer > 0}
+                onClick={sendDeleteOtp}
+              >
+                Resend OTP
+              </Button>
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={handleCloseDeleteModal}>Cancel</Button>
+              <Button variant="danger" isLoading={isDeleting} onClick={handleVerifyAndDelete}>Verify & Delete</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
