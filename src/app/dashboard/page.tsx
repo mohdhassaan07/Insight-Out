@@ -368,7 +368,12 @@ export default async function Dashboard() {
                   View all →
                 </Link>
               </CardHeader>
-              <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
+              <div className="divide-y min-h-20 divide-zinc-200 dark:divide-zinc-800">
+                {recentFeedback.length === 0 && (
+                  <div className="px-6 mt-4 py-4 text-sm text-zinc-500 dark:text-zinc-400">
+                    No recent feedbacks available.
+                  </div>
+                )}
                 {recentFeedback.map((feedback) => (
                   <div key={feedback.id} className="px-6 py-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
                     <p className="text-sm text-zinc-900 dark:text-white line-clamp-2 mb-3">
@@ -387,32 +392,34 @@ export default async function Dashboard() {
 
           {/* Category Distribution */}
           <div>
-            <Card>
-              <CardHeader>
-                <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
-                  Category Distribution
-                </h2>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {categoryDistribution.map((category, index) => (
-                  <div key={index}>
-                    <div className="flex items-center justify-between text-sm mb-1">
-                      <span className="text-zinc-700 dark:text-zinc-300">{category.name}</span>
-                      <span className="text-zinc-500">{category.count}</span>
+            {categoryDistribution.length > 0 &&
+              <Card className="mb-6">
+                <CardHeader>
+                  <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
+                    Category Distribution
+                  </h2>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {categoryDistribution.map((category, index) => (
+                    <div key={index}>
+                      <div className="flex items-center justify-between text-sm mb-1">
+                        <span className="text-zinc-700 dark:text-zinc-300">{category.name}</span>
+                        <span className="text-zinc-500">{category.count}</span>
+                      </div>
+                      <div className="h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${category.color} rounded-full transition-all duration-500`}
+                          style={{ width: `${category.percentage}%` }}
+                        />
+                      </div>
                     </div>
-                    <div className="h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full ${category.color} rounded-full transition-all duration-500`}
-                        style={{ width: `${category.percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+                  ))}
+                </CardContent>
+              </Card>
+            }
 
             {/* Quick Actions */}
-            <Card className="mt-6">
+            <Card>
               <CardHeader>
                 <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
                   Quick Actions

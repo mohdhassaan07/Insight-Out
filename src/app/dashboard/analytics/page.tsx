@@ -5,7 +5,7 @@ import { LoadingCard } from "@/src/components/ui/Loading";
 import { usefeedbackStore } from "@/src/store/feedbackStore";
 import axios from "axios";
 import { useEffect, useState } from "react";
-
+import Link from "next/link";
 const categoryData = [
   { label: "Feature Request", value: 245, color: "bg-indigo-500" },
   { label: "Bug", value: 89, color: "bg-red-500" },
@@ -41,7 +41,7 @@ export default function AnalyticsPage() {
     const res = await axios.get('/api/v1/getCategory');
     setcategoryCounts(res.data.categories);
   }
-  
+
   useEffect(() => {
     fetchAllFeedbacks();
     fetchCategories();
@@ -258,168 +258,197 @@ export default function AnalyticsPage() {
           </Card>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8 mb-8">
-          {/* Sentiment Breakdown */}
-          <Card>
-            <CardHeader>
-              <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
-                Sentiment Breakdown
-              </h2>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-center py-8">
-                {/* Simple donut chart representation */}
-                <div className="relative w-48 h-48">
-                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="40" fill="none" stroke="#f4f4f5" strokeWidth="12" className="dark:stroke-zinc-800" />
-                    {/* Positive */}
-                    <circle
-                      cx="50" cy="50" r="40" fill="none"
-                      stroke={sentimentData[0].stroke} strokeWidth="12"
-                      strokeDasharray={`${sentimentData[0].value * 2.51} ${100 * 2.51}`}
-                      strokeDashoffset="0"
-                    />
-                    {/* Neutral */}
-                    <circle
-                      cx="50" cy="50" r="40" fill="none"
-                      stroke={sentimentData[1].stroke} strokeWidth="12"
-                      strokeDasharray={`${sentimentData[1].value * 2.51} ${100 * 2.51}`}
-                      strokeDashoffset={`${-sentimentData[0].value * 2.51}`}
-                    />
-                    {/* Negative */}
-                    <circle
-                      cx="50" cy="50" r="40" fill="none"
-                      stroke={sentimentData[2].stroke} strokeWidth="12"
-                      strokeDasharray={`${sentimentData[2].value * 2.51} ${100 * 2.51}`}
-                      strokeDashoffset={`${-(sentimentData[0].value + sentimentData[1].value) * 2.51}`}
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center flex-col">
-                    <p className="text-3xl font-bold text-zinc-900 dark:text-white">{highestSentimentRate().value}%</p>
-                    <p className="text-sm text-zinc-500">{highestSentimentRate().label}</p>
+        {feedbacks.length > 0 ?
+          <div>
+            <div className="grid lg:grid-cols-2 gap-8 mb-8">
+              {/* Sentiment Breakdown */}
+              <Card>
+                <CardHeader>
+                  <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
+                    Sentiment Breakdown
+                  </h2>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-center py-8">
+                    {/* Simple donut chart representation */}
+                    <div className="relative w-48 h-48">
+                      <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="40" fill="none" stroke="#f4f4f5" strokeWidth="12" className="dark:stroke-zinc-800" />
+                        {/* Positive */}
+                        <circle
+                          cx="50" cy="50" r="40" fill="none"
+                          stroke={sentimentData[0].stroke} strokeWidth="12"
+                          strokeDasharray={`${sentimentData[0].value * 2.51} ${100 * 2.51}`}
+                          strokeDashoffset="0"
+                        />
+                        {/* Neutral */}
+                        <circle
+                          cx="50" cy="50" r="40" fill="none"
+                          stroke={sentimentData[1].stroke} strokeWidth="12"
+                          strokeDasharray={`${sentimentData[1].value * 2.51} ${100 * 2.51}`}
+                          strokeDashoffset={`${-sentimentData[0].value * 2.51}`}
+                        />
+                        {/* Negative */}
+                        <circle
+                          cx="50" cy="50" r="40" fill="none"
+                          stroke={sentimentData[2].stroke} strokeWidth="12"
+                          strokeDasharray={`${sentimentData[2].value * 2.51} ${100 * 2.51}`}
+                          strokeDashoffset={`${-(sentimentData[0].value + sentimentData[1].value) * 2.51}`}
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center flex-col">
+                        <p className="text-3xl font-bold text-zinc-900 dark:text-white">{highestSentimentRate().value}%</p>
+                        <p className="text-sm text-zinc-500">{highestSentimentRate().label}</p>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-              <div className="flex justify-center gap-6">
-                {sentimentData.map((item) => (
-                  <div key={item.label} className="flex items-center gap-2">
-                    <div className={`w-3 h-3 rounded-full ${item.color}`} />
-                    <span className="text-sm text-zinc-600 dark:text-zinc-400">
-                      {item.label} ({item.value}%)
-                    </span>
+                  <div className="flex justify-center gap-6">
+                    {sentimentData.map((item) => (
+                      <div key={item.label} className="flex items-center gap-2">
+                        <div className={`w-3 h-3 rounded-full ${item.color}`} />
+                        <span className="text-sm text-zinc-600 dark:text-zinc-400">
+                          {item.label} ({item.value}%)
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
 
-          {/* Monthly Trends */}
-          <Card>
-            <CardHeader>
-              <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
-                Monthly Trends
-              </h2>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-end justify-between h-48 gap-2 pt-4">
-                {monthlyTrends.map((month) => (
-                  <div key={month.month} className="flex-1 flex flex-col items-center gap-2">
-                    <div className="w-full flex flex-col gap-1">
+              {/* Monthly Trends */}
+              <Card>
+                <CardHeader>
+                  <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
+                    Monthly Trends
+                  </h2>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-end justify-between h-48 gap-2 pt-4">
+                    {monthlyTrends.map((month) => (
+                      <div key={month.month} className="flex-1 flex flex-col items-center gap-2">
+                        <div className="w-full flex flex-col gap-1">
+                          <div
+                            className="w-full bg-linear-to-t from-indigo-600 to-purple-600 rounded-t-sm transition-all duration-500"
+                            style={{ height: `${(month.feedbacks / maxFeedback) * 150}px` }}
+                          />
+                        </div>
+                        <span className="text-xs text-zinc-500">{month.month}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
+                    <div>
+                      <p className="text-2xl font-bold text-zinc-900 dark:text-white">
+                        {monthOverMonthGrowth >= 0 ? '+' : ''}{monthOverMonthGrowth}%
+                      </p>
+                      <p className="text-sm text-zinc-500">vs last month</p>
+                    </div>
+                    <div className={`flex items-center gap-2 ${monthOverMonthGrowth >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                      <svg className={`w-5 h-5 ${monthOverMonthGrowth < 0 ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                      </svg>
+                      <span className="text-sm font-medium">{monthOverMonthGrowth >= 0 ? 'Trending up' : 'Trending down'}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            <div className="grid lg:grid-cols-2 gap-8">
+              {/* Category Distribution */}
+              <Card>
+                <CardHeader>
+                  <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
+                    Category Distribution
+                  </h2>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {loading ? (
+                    <LoadingCard />
+                  ) : (
+                    categoryDistribution.map((category, index) => (
+                      <div key={index}>
+                        <div className="flex items-center justify-between text-sm mb-1">
+                          <span className="text-zinc-700 dark:text-zinc-300">{category.name}</span>
+                          <span className="text-zinc-500">
+                            {category.count} ({category.percentage}%)
+                          </span>
+                        </div>
+                        <div className="h-2.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${category.color} rounded-full transition-all duration-500`}
+                            style={{ width: `${category.percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))
+                  )}
+
+                </CardContent>
+              </Card>
+
+              {/* Top Keywords */}
+              <Card>
+                <CardHeader>
+                  <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
+                    Top Keywords
+                  </h2>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {topKeywords.map((keyword) => (
                       <div
-                        className="w-full bg-linear-to-t from-indigo-600 to-purple-600 rounded-t-sm transition-all duration-500"
-                        style={{ height: `${(month.feedbacks / maxFeedback) * 150}px` }}
-                      />
-                    </div>
-                    <span className="text-xs text-zinc-500">{month.month}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="flex items-center justify-between mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
-                <div>
-                  <p className="text-2xl font-bold text-zinc-900 dark:text-white">
-                    {monthOverMonthGrowth >= 0 ? '+' : ''}{monthOverMonthGrowth}%
-                  </p>
-                  <p className="text-sm text-zinc-500">vs last month</p>
-                </div>
-                <div className={`flex items-center gap-2 ${monthOverMonthGrowth >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                  <svg className={`w-5 h-5 ${monthOverMonthGrowth < 0 ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                  </svg>
-                  <span className="text-sm font-medium">{monthOverMonthGrowth >= 0 ? 'Trending up' : 'Trending down'}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Category Distribution */}
-          <Card>
-            <CardHeader>
-              <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
-                Category Distribution
-              </h2>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {loading ? (
-                <LoadingCard />
-              ) : (
-                categoryDistribution.map((category, index) => (
-                  <div key={index}>
-                    <div className="flex items-center justify-between text-sm mb-1">
-                      <span className="text-zinc-700 dark:text-zinc-300">{category.name}</span>
-                      <span className="text-zinc-500">
-                        {category.count} ({category.percentage}%)
-                      </span>
-                    </div>
-                    <div className="h-2.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full ${category.color} rounded-full transition-all duration-500`}
-                        style={{ width: `${category.percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                ))
-              )}
-
-            </CardContent>
-          </Card>
-
-          {/* Top Keywords */}
-          <Card>
-            <CardHeader>
-              <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
-                Top Keywords
-              </h2>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {topKeywords.map((keyword) => (
-                  <div
-                    key={keyword.word}
-                    className={`
+                        key={keyword.word}
+                        className={`
                       px-3 py-1.5 rounded-full text-sm font-medium
                       ${keyword.sentiment === "positive"
-                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                        : keyword.sentiment === "negative"
-                          ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                          : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-                      }
+                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                            : keyword.sentiment === "negative"
+                              ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                              : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                          }
                     `}
-                  >
-                    {keyword.word}
-                    <span className="ml-1 opacity-60">({keyword.count})</span>
+                      >
+                        {keyword.word}
+                        <span className="ml-1 opacity-60">({keyword.count})</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-              <div className="mt-6 pt-4 border-t border-zinc-200 dark:border-zinc-800">
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                  Keywords are extracted automatically from feedback and colored by sentiment.
+                  <div className="mt-6 pt-4 border-t border-zinc-200 dark:border-zinc-800">
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                      Keywords are extracted automatically from feedback and colored by sentiment.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+          : <Card>
+            <CardContent className="p-6">
+              <div className="flex flex-col items-center justify-center py-12">
+                <svg className="w-12 h-12 text-zinc-400 dark:text-zinc-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-3-3v6m-7 4h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <p className="text-lg font-semibold text-zinc-900 dark:text-white">
+                  No Feedbacks Yet
                 </p>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">
+                  Once you start receiving feedback, you'll see analytics here.
+                </p>
+                <Link href="/dashboard/upload" className="flex items-center gap-3 p-3 rounded-lg">
+                  <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-zinc-900 dark:text-white">Upload CSV</p>
+                    
+                  </div>
+                </Link>
               </div>
             </CardContent>
           </Card>
-        </div>
+        }
       </div>
     </DashboardLayout>
   );

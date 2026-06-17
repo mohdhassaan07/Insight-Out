@@ -51,6 +51,7 @@ export default function SettingsPage() {
   });
 
   useEffect(() => {
+    console.log("Session data:", session);
     if (!session?.user) return;
 
     setformData({

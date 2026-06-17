@@ -32,8 +32,7 @@ export default function SignInPage() {
     }
 
     if (res?.ok) {
-      router.push("/dashboard");
-      router.refresh();
+      window.location.href = "/dashboard";
     }
   }
 
