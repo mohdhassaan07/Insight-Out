@@ -79,17 +79,17 @@ async function classifyWithGemini(feedbacks: string[]) {
 
 // using groqAi
 function getGroqChatCompletion(feedbacks: string[]) {
-  const prompt = buildPrompt(feedbacks);
+    const prompt = buildPrompt(feedbacks);
 
-  return groq.chat.completions.create({
-    messages: [
-      {
-        role: "user",
-        content: prompt,
-      },
-    ],
-    model: "openai/gpt-oss-20b",
-  });
+    return groq.chat.completions.create({
+        messages: [
+            {
+                role: "user",
+                content: prompt,
+            },
+        ],
+        model: "openai/gpt-oss-20b",
+    });
 }
 
 async function classifyWithGroq(feedbacks: string[]) {
@@ -118,10 +118,10 @@ export async function POST(req: Request) {
     try {
         const ip = req.headers.get("x-forwarded-for") ?? "anonymous";
         const { success } = await uploadLimiter.limit(ip);
-        if(!success) {
+        if (!success) {
             return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
         }
-        
+
         const session = await getServerSession(authOptions);
         if (!session) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -204,11 +204,22 @@ export async function POST(req: Request) {
         }
         console.log("Final Results:", finalResults);
         // Store results in the database
-        const feedbackdata = await prisma.feedback.createMany({
-            data: finalResults,
-            skipDuplicates: true,
-        })
 
+        const [feedbackdata, orgData] =  await Promise.all([
+            prisma.feedback.createMany({
+                data: finalResults,
+                skipDuplicates: true,
+            }), 
+            prisma.organization.update({
+                where: { id: session.user.organizationId },
+                data: { totalCSVUploads: { increment: 1 } }
+            }),
+            prisma.csvUpload.create({
+                data: {
+                    organizationId: session.user.organizationId,
+                }
+            })
+        ])
         return NextResponse.json({ data: feedbackdata }, { status: 200 });
 
     } catch (error: any) {

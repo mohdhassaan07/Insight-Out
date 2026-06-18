@@ -20,8 +20,18 @@ export type OrganizationModel = runtime.Types.Result.DefaultSelection<Prisma.$Or
 
 export type AggregateOrganization = {
   _count: OrganizationCountAggregateOutputType | null
+  _avg: OrganizationAvgAggregateOutputType | null
+  _sum: OrganizationSumAggregateOutputType | null
   _min: OrganizationMinAggregateOutputType | null
   _max: OrganizationMaxAggregateOutputType | null
+}
+
+export type OrganizationAvgAggregateOutputType = {
+  totalCSVUploads: number | null
+}
+
+export type OrganizationSumAggregateOutputType = {
+  totalCSVUploads: number | null
 }
 
 export type OrganizationMinAggregateOutputType = {
@@ -29,6 +39,7 @@ export type OrganizationMinAggregateOutputType = {
   name: string | null
   plan: $Enums.Plan | null
   createdAt: Date | null
+  totalCSVUploads: number | null
 }
 
 export type OrganizationMaxAggregateOutputType = {
@@ -36,6 +47,7 @@ export type OrganizationMaxAggregateOutputType = {
   name: string | null
   plan: $Enums.Plan | null
   createdAt: Date | null
+  totalCSVUploads: number | null
 }
 
 export type OrganizationCountAggregateOutputType = {
@@ -43,15 +55,25 @@ export type OrganizationCountAggregateOutputType = {
   name: number
   plan: number
   createdAt: number
+  totalCSVUploads: number
   _all: number
 }
 
+
+export type OrganizationAvgAggregateInputType = {
+  totalCSVUploads?: true
+}
+
+export type OrganizationSumAggregateInputType = {
+  totalCSVUploads?: true
+}
 
 export type OrganizationMinAggregateInputType = {
   id?: true
   name?: true
   plan?: true
   createdAt?: true
+  totalCSVUploads?: true
 }
 
 export type OrganizationMaxAggregateInputType = {
@@ -59,6 +81,7 @@ export type OrganizationMaxAggregateInputType = {
   name?: true
   plan?: true
   createdAt?: true
+  totalCSVUploads?: true
 }
 
 export type OrganizationCountAggregateInputType = {
@@ -66,6 +89,7 @@ export type OrganizationCountAggregateInputType = {
   name?: true
   plan?: true
   createdAt?: true
+  totalCSVUploads?: true
   _all?: true
 }
 
@@ -107,6 +131,18 @@ export type OrganizationAggregateArgs<ExtArgs extends runtime.Types.Extensions.I
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: OrganizationAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: OrganizationSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: OrganizationMinAggregateInputType
@@ -137,6 +173,8 @@ export type OrganizationGroupByArgs<ExtArgs extends runtime.Types.Extensions.Int
   take?: number
   skip?: number
   _count?: OrganizationCountAggregateInputType | true
+  _avg?: OrganizationAvgAggregateInputType
+  _sum?: OrganizationSumAggregateInputType
   _min?: OrganizationMinAggregateInputType
   _max?: OrganizationMaxAggregateInputType
 }
@@ -146,7 +184,10 @@ export type OrganizationGroupByOutputType = {
   name: string | null
   plan: $Enums.Plan
   createdAt: Date
+  totalCSVUploads: number
   _count: OrganizationCountAggregateOutputType | null
+  _avg: OrganizationAvgAggregateOutputType | null
+  _sum: OrganizationSumAggregateOutputType | null
   _min: OrganizationMinAggregateOutputType | null
   _max: OrganizationMaxAggregateOutputType | null
 }
@@ -174,8 +215,10 @@ export type OrganizationWhereInput = {
   name?: Prisma.StringNullableFilter<"Organization"> | string | null
   plan?: Prisma.EnumPlanFilter<"Organization"> | $Enums.Plan
   createdAt?: Prisma.DateTimeFilter<"Organization"> | Date | string
+  totalCSVUploads?: Prisma.IntFilter<"Organization"> | number
   users?: Prisma.UserListRelationFilter
   feedbacks?: Prisma.FeedbackListRelationFilter
+  csvUploads?: Prisma.CsvUploadListRelationFilter
 }
 
 export type OrganizationOrderByWithRelationInput = {
@@ -183,8 +226,10 @@ export type OrganizationOrderByWithRelationInput = {
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   plan?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  totalCSVUploads?: Prisma.SortOrder
   users?: Prisma.UserOrderByRelationAggregateInput
   feedbacks?: Prisma.FeedbackOrderByRelationAggregateInput
+  csvUploads?: Prisma.CsvUploadOrderByRelationAggregateInput
 }
 
 export type OrganizationWhereUniqueInput = Prisma.AtLeast<{
@@ -195,8 +240,10 @@ export type OrganizationWhereUniqueInput = Prisma.AtLeast<{
   name?: Prisma.StringNullableFilter<"Organization"> | string | null
   plan?: Prisma.EnumPlanFilter<"Organization"> | $Enums.Plan
   createdAt?: Prisma.DateTimeFilter<"Organization"> | Date | string
+  totalCSVUploads?: Prisma.IntFilter<"Organization"> | number
   users?: Prisma.UserListRelationFilter
   feedbacks?: Prisma.FeedbackListRelationFilter
+  csvUploads?: Prisma.CsvUploadListRelationFilter
 }, "id">
 
 export type OrganizationOrderByWithAggregationInput = {
@@ -204,9 +251,12 @@ export type OrganizationOrderByWithAggregationInput = {
   name?: Prisma.SortOrderInput | Prisma.SortOrder
   plan?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  totalCSVUploads?: Prisma.SortOrder
   _count?: Prisma.OrganizationCountOrderByAggregateInput
+  _avg?: Prisma.OrganizationAvgOrderByAggregateInput
   _max?: Prisma.OrganizationMaxOrderByAggregateInput
   _min?: Prisma.OrganizationMinOrderByAggregateInput
+  _sum?: Prisma.OrganizationSumOrderByAggregateInput
 }
 
 export type OrganizationScalarWhereWithAggregatesInput = {
@@ -217,6 +267,7 @@ export type OrganizationScalarWhereWithAggregatesInput = {
   name?: Prisma.StringNullableWithAggregatesFilter<"Organization"> | string | null
   plan?: Prisma.EnumPlanWithAggregatesFilter<"Organization"> | $Enums.Plan
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Organization"> | Date | string
+  totalCSVUploads?: Prisma.IntWithAggregatesFilter<"Organization"> | number
 }
 
 export type OrganizationCreateInput = {
@@ -224,8 +275,10 @@ export type OrganizationCreateInput = {
   name?: string | null
   plan?: $Enums.Plan
   createdAt?: Date | string
+  totalCSVUploads?: number
   users?: Prisma.UserCreateNestedManyWithoutOrganizationInput
   feedbacks?: Prisma.FeedbackCreateNestedManyWithoutOrganizationInput
+  csvUploads?: Prisma.CsvUploadCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUncheckedCreateInput = {
@@ -233,8 +286,10 @@ export type OrganizationUncheckedCreateInput = {
   name?: string | null
   plan?: $Enums.Plan
   createdAt?: Date | string
+  totalCSVUploads?: number
   users?: Prisma.UserUncheckedCreateNestedManyWithoutOrganizationInput
   feedbacks?: Prisma.FeedbackUncheckedCreateNestedManyWithoutOrganizationInput
+  csvUploads?: Prisma.CsvUploadUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUpdateInput = {
@@ -242,8 +297,10 @@ export type OrganizationUpdateInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  totalCSVUploads?: Prisma.IntFieldUpdateOperationsInput | number
   users?: Prisma.UserUpdateManyWithoutOrganizationNestedInput
   feedbacks?: Prisma.FeedbackUpdateManyWithoutOrganizationNestedInput
+  csvUploads?: Prisma.CsvUploadUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationUncheckedUpdateInput = {
@@ -251,8 +308,10 @@ export type OrganizationUncheckedUpdateInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  totalCSVUploads?: Prisma.IntFieldUpdateOperationsInput | number
   users?: Prisma.UserUncheckedUpdateManyWithoutOrganizationNestedInput
   feedbacks?: Prisma.FeedbackUncheckedUpdateManyWithoutOrganizationNestedInput
+  csvUploads?: Prisma.CsvUploadUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationCreateManyInput = {
@@ -260,6 +319,7 @@ export type OrganizationCreateManyInput = {
   name?: string | null
   plan?: $Enums.Plan
   createdAt?: Date | string
+  totalCSVUploads?: number
 }
 
 export type OrganizationUpdateManyMutationInput = {
@@ -267,6 +327,7 @@ export type OrganizationUpdateManyMutationInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  totalCSVUploads?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type OrganizationUncheckedUpdateManyInput = {
@@ -274,6 +335,7 @@ export type OrganizationUncheckedUpdateManyInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  totalCSVUploads?: Prisma.IntFieldUpdateOperationsInput | number
 }
 
 export type OrganizationScalarRelationFilter = {
@@ -286,6 +348,11 @@ export type OrganizationCountOrderByAggregateInput = {
   name?: Prisma.SortOrder
   plan?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  totalCSVUploads?: Prisma.SortOrder
+}
+
+export type OrganizationAvgOrderByAggregateInput = {
+  totalCSVUploads?: Prisma.SortOrder
 }
 
 export type OrganizationMaxOrderByAggregateInput = {
@@ -293,6 +360,7 @@ export type OrganizationMaxOrderByAggregateInput = {
   name?: Prisma.SortOrder
   plan?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  totalCSVUploads?: Prisma.SortOrder
 }
 
 export type OrganizationMinOrderByAggregateInput = {
@@ -300,6 +368,11 @@ export type OrganizationMinOrderByAggregateInput = {
   name?: Prisma.SortOrder
   plan?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  totalCSVUploads?: Prisma.SortOrder
+}
+
+export type OrganizationSumOrderByAggregateInput = {
+  totalCSVUploads?: Prisma.SortOrder
 }
 
 export type OrganizationCreateNestedOneWithoutUsersInput = {
@@ -320,6 +393,14 @@ export type EnumPlanFieldUpdateOperationsInput = {
   set?: $Enums.Plan
 }
 
+export type IntFieldUpdateOperationsInput = {
+  set?: number
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
 export type OrganizationCreateNestedOneWithoutFeedbacksInput = {
   create?: Prisma.XOR<Prisma.OrganizationCreateWithoutFeedbacksInput, Prisma.OrganizationUncheckedCreateWithoutFeedbacksInput>
   connectOrCreate?: Prisma.OrganizationCreateOrConnectWithoutFeedbacksInput
@@ -334,12 +415,28 @@ export type OrganizationUpdateOneRequiredWithoutFeedbacksNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.OrganizationUpdateToOneWithWhereWithoutFeedbacksInput, Prisma.OrganizationUpdateWithoutFeedbacksInput>, Prisma.OrganizationUncheckedUpdateWithoutFeedbacksInput>
 }
 
+export type OrganizationCreateNestedOneWithoutCsvUploadsInput = {
+  create?: Prisma.XOR<Prisma.OrganizationCreateWithoutCsvUploadsInput, Prisma.OrganizationUncheckedCreateWithoutCsvUploadsInput>
+  connectOrCreate?: Prisma.OrganizationCreateOrConnectWithoutCsvUploadsInput
+  connect?: Prisma.OrganizationWhereUniqueInput
+}
+
+export type OrganizationUpdateOneRequiredWithoutCsvUploadsNestedInput = {
+  create?: Prisma.XOR<Prisma.OrganizationCreateWithoutCsvUploadsInput, Prisma.OrganizationUncheckedCreateWithoutCsvUploadsInput>
+  connectOrCreate?: Prisma.OrganizationCreateOrConnectWithoutCsvUploadsInput
+  upsert?: Prisma.OrganizationUpsertWithoutCsvUploadsInput
+  connect?: Prisma.OrganizationWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.OrganizationUpdateToOneWithWhereWithoutCsvUploadsInput, Prisma.OrganizationUpdateWithoutCsvUploadsInput>, Prisma.OrganizationUncheckedUpdateWithoutCsvUploadsInput>
+}
+
 export type OrganizationCreateWithoutUsersInput = {
   id?: string
   name?: string | null
   plan?: $Enums.Plan
   createdAt?: Date | string
+  totalCSVUploads?: number
   feedbacks?: Prisma.FeedbackCreateNestedManyWithoutOrganizationInput
+  csvUploads?: Prisma.CsvUploadCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUncheckedCreateWithoutUsersInput = {
@@ -347,7 +444,9 @@ export type OrganizationUncheckedCreateWithoutUsersInput = {
   name?: string | null
   plan?: $Enums.Plan
   createdAt?: Date | string
+  totalCSVUploads?: number
   feedbacks?: Prisma.FeedbackUncheckedCreateNestedManyWithoutOrganizationInput
+  csvUploads?: Prisma.CsvUploadUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationCreateOrConnectWithoutUsersInput = {
@@ -371,7 +470,9 @@ export type OrganizationUpdateWithoutUsersInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  totalCSVUploads?: Prisma.IntFieldUpdateOperationsInput | number
   feedbacks?: Prisma.FeedbackUpdateManyWithoutOrganizationNestedInput
+  csvUploads?: Prisma.CsvUploadUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationUncheckedUpdateWithoutUsersInput = {
@@ -379,7 +480,9 @@ export type OrganizationUncheckedUpdateWithoutUsersInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  totalCSVUploads?: Prisma.IntFieldUpdateOperationsInput | number
   feedbacks?: Prisma.FeedbackUncheckedUpdateManyWithoutOrganizationNestedInput
+  csvUploads?: Prisma.CsvUploadUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationCreateWithoutFeedbacksInput = {
@@ -387,7 +490,9 @@ export type OrganizationCreateWithoutFeedbacksInput = {
   name?: string | null
   plan?: $Enums.Plan
   createdAt?: Date | string
+  totalCSVUploads?: number
   users?: Prisma.UserCreateNestedManyWithoutOrganizationInput
+  csvUploads?: Prisma.CsvUploadCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUncheckedCreateWithoutFeedbacksInput = {
@@ -395,7 +500,9 @@ export type OrganizationUncheckedCreateWithoutFeedbacksInput = {
   name?: string | null
   plan?: $Enums.Plan
   createdAt?: Date | string
+  totalCSVUploads?: number
   users?: Prisma.UserUncheckedCreateNestedManyWithoutOrganizationInput
+  csvUploads?: Prisma.CsvUploadUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationCreateOrConnectWithoutFeedbacksInput = {
@@ -419,7 +526,9 @@ export type OrganizationUpdateWithoutFeedbacksInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  totalCSVUploads?: Prisma.IntFieldUpdateOperationsInput | number
   users?: Prisma.UserUpdateManyWithoutOrganizationNestedInput
+  csvUploads?: Prisma.CsvUploadUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationUncheckedUpdateWithoutFeedbacksInput = {
@@ -427,7 +536,65 @@ export type OrganizationUncheckedUpdateWithoutFeedbacksInput = {
   name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  totalCSVUploads?: Prisma.IntFieldUpdateOperationsInput | number
   users?: Prisma.UserUncheckedUpdateManyWithoutOrganizationNestedInput
+  csvUploads?: Prisma.CsvUploadUncheckedUpdateManyWithoutOrganizationNestedInput
+}
+
+export type OrganizationCreateWithoutCsvUploadsInput = {
+  id?: string
+  name?: string | null
+  plan?: $Enums.Plan
+  createdAt?: Date | string
+  totalCSVUploads?: number
+  users?: Prisma.UserCreateNestedManyWithoutOrganizationInput
+  feedbacks?: Prisma.FeedbackCreateNestedManyWithoutOrganizationInput
+}
+
+export type OrganizationUncheckedCreateWithoutCsvUploadsInput = {
+  id?: string
+  name?: string | null
+  plan?: $Enums.Plan
+  createdAt?: Date | string
+  totalCSVUploads?: number
+  users?: Prisma.UserUncheckedCreateNestedManyWithoutOrganizationInput
+  feedbacks?: Prisma.FeedbackUncheckedCreateNestedManyWithoutOrganizationInput
+}
+
+export type OrganizationCreateOrConnectWithoutCsvUploadsInput = {
+  where: Prisma.OrganizationWhereUniqueInput
+  create: Prisma.XOR<Prisma.OrganizationCreateWithoutCsvUploadsInput, Prisma.OrganizationUncheckedCreateWithoutCsvUploadsInput>
+}
+
+export type OrganizationUpsertWithoutCsvUploadsInput = {
+  update: Prisma.XOR<Prisma.OrganizationUpdateWithoutCsvUploadsInput, Prisma.OrganizationUncheckedUpdateWithoutCsvUploadsInput>
+  create: Prisma.XOR<Prisma.OrganizationCreateWithoutCsvUploadsInput, Prisma.OrganizationUncheckedCreateWithoutCsvUploadsInput>
+  where?: Prisma.OrganizationWhereInput
+}
+
+export type OrganizationUpdateToOneWithWhereWithoutCsvUploadsInput = {
+  where?: Prisma.OrganizationWhereInput
+  data: Prisma.XOR<Prisma.OrganizationUpdateWithoutCsvUploadsInput, Prisma.OrganizationUncheckedUpdateWithoutCsvUploadsInput>
+}
+
+export type OrganizationUpdateWithoutCsvUploadsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  totalCSVUploads?: Prisma.IntFieldUpdateOperationsInput | number
+  users?: Prisma.UserUpdateManyWithoutOrganizationNestedInput
+  feedbacks?: Prisma.FeedbackUpdateManyWithoutOrganizationNestedInput
+}
+
+export type OrganizationUncheckedUpdateWithoutCsvUploadsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  totalCSVUploads?: Prisma.IntFieldUpdateOperationsInput | number
+  users?: Prisma.UserUncheckedUpdateManyWithoutOrganizationNestedInput
+  feedbacks?: Prisma.FeedbackUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 
@@ -438,11 +605,13 @@ export type OrganizationUncheckedUpdateWithoutFeedbacksInput = {
 export type OrganizationCountOutputType = {
   users: number
   feedbacks: number
+  csvUploads: number
 }
 
 export type OrganizationCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   users?: boolean | OrganizationCountOutputTypeCountUsersArgs
   feedbacks?: boolean | OrganizationCountOutputTypeCountFeedbacksArgs
+  csvUploads?: boolean | OrganizationCountOutputTypeCountCsvUploadsArgs
 }
 
 /**
@@ -469,14 +638,23 @@ export type OrganizationCountOutputTypeCountFeedbacksArgs<ExtArgs extends runtim
   where?: Prisma.FeedbackWhereInput
 }
 
+/**
+ * OrganizationCountOutputType without action
+ */
+export type OrganizationCountOutputTypeCountCsvUploadsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CsvUploadWhereInput
+}
+
 
 export type OrganizationSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
   plan?: boolean
   createdAt?: boolean
+  totalCSVUploads?: boolean
   users?: boolean | Prisma.Organization$usersArgs<ExtArgs>
   feedbacks?: boolean | Prisma.Organization$feedbacksArgs<ExtArgs>
+  csvUploads?: boolean | Prisma.Organization$csvUploadsArgs<ExtArgs>
   _count?: boolean | Prisma.OrganizationCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["organization"]>
 
@@ -485,6 +663,7 @@ export type OrganizationSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   name?: boolean
   plan?: boolean
   createdAt?: boolean
+  totalCSVUploads?: boolean
 }, ExtArgs["result"]["organization"]>
 
 export type OrganizationSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -492,6 +671,7 @@ export type OrganizationSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   name?: boolean
   plan?: boolean
   createdAt?: boolean
+  totalCSVUploads?: boolean
 }, ExtArgs["result"]["organization"]>
 
 export type OrganizationSelectScalar = {
@@ -499,12 +679,14 @@ export type OrganizationSelectScalar = {
   name?: boolean
   plan?: boolean
   createdAt?: boolean
+  totalCSVUploads?: boolean
 }
 
-export type OrganizationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "plan" | "createdAt", ExtArgs["result"]["organization"]>
+export type OrganizationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "plan" | "createdAt" | "totalCSVUploads", ExtArgs["result"]["organization"]>
 export type OrganizationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   users?: boolean | Prisma.Organization$usersArgs<ExtArgs>
   feedbacks?: boolean | Prisma.Organization$feedbacksArgs<ExtArgs>
+  csvUploads?: boolean | Prisma.Organization$csvUploadsArgs<ExtArgs>
   _count?: boolean | Prisma.OrganizationCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type OrganizationIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -515,12 +697,14 @@ export type $OrganizationPayload<ExtArgs extends runtime.Types.Extensions.Intern
   objects: {
     users: Prisma.$UserPayload<ExtArgs>[]
     feedbacks: Prisma.$FeedbackPayload<ExtArgs>[]
+    csvUploads: Prisma.$CsvUploadPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     name: string | null
     plan: $Enums.Plan
     createdAt: Date
+    totalCSVUploads: number
   }, ExtArgs["result"]["organization"]>
   composites: {}
 }
@@ -917,6 +1101,7 @@ export interface Prisma__OrganizationClient<T, Null = never, ExtArgs extends run
   readonly [Symbol.toStringTag]: "PrismaPromise"
   users<T extends Prisma.Organization$usersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Organization$usersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   feedbacks<T extends Prisma.Organization$feedbacksArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Organization$feedbacksArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FeedbackPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  csvUploads<T extends Prisma.Organization$csvUploadsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Organization$csvUploadsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CsvUploadPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -950,6 +1135,7 @@ export interface OrganizationFieldRefs {
   readonly name: Prisma.FieldRef<"Organization", 'String'>
   readonly plan: Prisma.FieldRef<"Organization", 'Plan'>
   readonly createdAt: Prisma.FieldRef<"Organization", 'DateTime'>
+  readonly totalCSVUploads: Prisma.FieldRef<"Organization", 'Int'>
 }
     
 
@@ -1383,6 +1569,30 @@ export type Organization$feedbacksArgs<ExtArgs extends runtime.Types.Extensions.
   take?: number
   skip?: number
   distinct?: Prisma.FeedbackScalarFieldEnum | Prisma.FeedbackScalarFieldEnum[]
+}
+
+/**
+ * Organization.csvUploads
+ */
+export type Organization$csvUploadsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the CsvUpload
+   */
+  select?: Prisma.CsvUploadSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the CsvUpload
+   */
+  omit?: Prisma.CsvUploadOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CsvUploadInclude<ExtArgs> | null
+  where?: Prisma.CsvUploadWhereInput
+  orderBy?: Prisma.CsvUploadOrderByWithRelationInput | Prisma.CsvUploadOrderByWithRelationInput[]
+  cursor?: Prisma.CsvUploadWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.CsvUploadScalarFieldEnum | Prisma.CsvUploadScalarFieldEnum[]
 }
 
 /**

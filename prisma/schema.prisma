@@ -24,8 +24,10 @@ model Organization{
   name String?
   plan  Plan  @default(Free)
   createdAt   DateTime  @default(now())
+  totalCSVUploads Int  @default(0)
   users       User[]
   feedbacks   Feedback[]
+  csvUploads  CsvUpload[]
 }
 
 model Feedback {
@@ -40,6 +42,15 @@ model Feedback {
   organization  Organization  @relation(fields : [organizationId], references : [id])
   createdAt DateTime  @default(now())
   @@index([primary_category,sentiment, organizationId])
+}
+
+model CsvUpload {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId, createdAt])
 }
 
 enum Plan{

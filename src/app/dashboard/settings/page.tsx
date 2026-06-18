@@ -359,9 +359,12 @@ export default function SettingsPage() {
                 label="OTP Verification"
                 placeholder="Enter 6-digit OTP"
                 value={otp}
-                min={100000}
-                type="number"
-                onChange={(e) => setOtp(e.target.value)}
+                required
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={6}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
               />
             </div>
             <div className="mb-6 flex items-center justify-between gap-3 rounded-lg bg-zinc-50 px-4 py-3 text-sm text-zinc-600 dark:bg-zinc-800/80 dark:text-zinc-300">

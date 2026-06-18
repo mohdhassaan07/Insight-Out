@@ -53,7 +53,8 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   User: 'User',
   Organization: 'Organization',
-  Feedback: 'Feedback'
+  Feedback: 'Feedback',
+  CsvUpload: 'CsvUpload'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -90,7 +91,8 @@ export const OrganizationScalarFieldEnum = {
   id: 'id',
   name: 'name',
   plan: 'plan',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  totalCSVUploads: 'totalCSVUploads'
 } as const
 
 export type OrganizationScalarFieldEnum = (typeof OrganizationScalarFieldEnum)[keyof typeof OrganizationScalarFieldEnum]
@@ -109,6 +111,15 @@ export const FeedbackScalarFieldEnum = {
 } as const
 
 export type FeedbackScalarFieldEnum = (typeof FeedbackScalarFieldEnum)[keyof typeof FeedbackScalarFieldEnum]
+
+
+export const CsvUploadScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  createdAt: 'createdAt'
+} as const
+
+export type CsvUploadScalarFieldEnum = (typeof CsvUploadScalarFieldEnum)[keyof typeof CsvUploadScalarFieldEnum]
 
 
 export const SortOrder = {

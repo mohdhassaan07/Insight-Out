@@ -386,7 +386,8 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 export const ModelName = {
   User: 'User',
   Organization: 'Organization',
-  Feedback: 'Feedback'
+  Feedback: 'Feedback',
+  CsvUpload: 'CsvUpload'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -402,7 +403,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "organization" | "feedback"
+    modelProps: "user" | "organization" | "feedback" | "csvUpload"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -628,6 +629,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    CsvUpload: {
+      payload: Prisma.$CsvUploadPayload<ExtArgs>
+      fields: Prisma.CsvUploadFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CsvUploadFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CsvUploadPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CsvUploadFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CsvUploadPayload>
+        }
+        findFirst: {
+          args: Prisma.CsvUploadFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CsvUploadPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CsvUploadFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CsvUploadPayload>
+        }
+        findMany: {
+          args: Prisma.CsvUploadFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CsvUploadPayload>[]
+        }
+        create: {
+          args: Prisma.CsvUploadCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CsvUploadPayload>
+        }
+        createMany: {
+          args: Prisma.CsvUploadCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CsvUploadCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CsvUploadPayload>[]
+        }
+        delete: {
+          args: Prisma.CsvUploadDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CsvUploadPayload>
+        }
+        update: {
+          args: Prisma.CsvUploadUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CsvUploadPayload>
+        }
+        deleteMany: {
+          args: Prisma.CsvUploadDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CsvUploadUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CsvUploadUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CsvUploadPayload>[]
+        }
+        upsert: {
+          args: Prisma.CsvUploadUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CsvUploadPayload>
+        }
+        aggregate: {
+          args: Prisma.CsvUploadAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCsvUpload>
+        }
+        groupBy: {
+          args: Prisma.CsvUploadGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CsvUploadGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CsvUploadCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CsvUploadCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -685,7 +760,8 @@ export const OrganizationScalarFieldEnum = {
   id: 'id',
   name: 'name',
   plan: 'plan',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  totalCSVUploads: 'totalCSVUploads'
 } as const
 
 export type OrganizationScalarFieldEnum = (typeof OrganizationScalarFieldEnum)[keyof typeof OrganizationScalarFieldEnum]
@@ -704,6 +780,15 @@ export const FeedbackScalarFieldEnum = {
 } as const
 
 export type FeedbackScalarFieldEnum = (typeof FeedbackScalarFieldEnum)[keyof typeof FeedbackScalarFieldEnum]
+
+
+export const CsvUploadScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  createdAt: 'createdAt'
+} as const
+
+export type CsvUploadScalarFieldEnum = (typeof CsvUploadScalarFieldEnum)[keyof typeof CsvUploadScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -779,6 +864,20 @@ export type ListEnumPlanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaM
 
 
 /**
+ * Reference to a field of type 'Int'
+ */
+export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
+    
+
+
+/**
+ * Reference to a field of type 'Int[]'
+ */
+export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+/**
  * Reference to a field of type 'Categories'
  */
 export type EnumCategoriesFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Categories'>
@@ -831,20 +930,6 @@ export type EnumStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaMod
  * Reference to a field of type 'Status[]'
  */
 export type ListEnumStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Status[]'>
-    
-
-
-/**
- * Reference to a field of type 'Int'
- */
-export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
-    
-
-
-/**
- * Reference to a field of type 'Int[]'
- */
-export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
     
 
 /**
@@ -945,6 +1030,7 @@ export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   organization?: Prisma.OrganizationOmit
   feedback?: Prisma.FeedbackOmit
+  csvUpload?: Prisma.CsvUploadOmit
 }
 
 /* Types for Logging */

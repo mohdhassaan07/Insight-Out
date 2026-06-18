@@ -18,6 +18,9 @@ async function getDashboardData(organizationId: string) {
 
   const [
     totalFeedbacks,
+    totalCSVUploads,
+    thisMonthCSVUploads,
+    lastMonthCSVUploads,
     sentimentCounts,
     categoryCounts,
     recentFeedback,
@@ -30,6 +33,21 @@ async function getDashboardData(organizationId: string) {
   ] = await Promise.all([
     prisma.feedback.count({
       where: { organizationId },
+    }),
+    prisma.csvUpload.count({
+      where: { organizationId },
+    }),
+    prisma.csvUpload.count({
+      where: {
+        organizationId,
+        createdAt: { gte: thisMonthStart },
+      },
+    }),
+    prisma.csvUpload.count({
+      where: {
+        organizationId,
+        createdAt: { gte: lastMonthStart, lte: lastMonthEnd },
+      },
     }),
     prisma.feedback.groupBy({
       where: { organizationId },
@@ -95,6 +113,9 @@ async function getDashboardData(organizationId: string) {
   const feedbackIncrementPercent = lastMonthFeedbacks > 0
     ? Math.round(((thisMonthFeedbacks - lastMonthFeedbacks) / lastMonthFeedbacks) * 100)
     : (thisMonthFeedbacks > 0 ? 100 : 0);
+  const totalCSVIncrementPercent = lastMonthCSVUploads > 0
+    ? Math.round(((thisMonthCSVUploads - lastMonthCSVUploads) / lastMonthCSVUploads) * 100)
+    : (thisMonthCSVUploads > 0 ? 100 : 0);
 
   const positiveCount = sentimentCounts.find(s => s.sentiment === "Positive")?._count || 0;
   const positivePercentage = totalFeedbacks > 0 ? Math.round((positiveCount / totalFeedbacks) * 100) : 0;
@@ -132,6 +153,8 @@ async function getDashboardData(organizationId: string) {
 
   return {
     totalFeedbacks,
+    totalCSVUploads: totalCSVUploads || 0,
+    totalCSVIncrementPercent,
     feedbackIncrementPercent,
     positivePercentage,
     positiveIncrementPercent,
@@ -146,12 +169,14 @@ async function getDashboardData(organizationId: string) {
 
 function getStats(data: {
   totalFeedbacks: number;
+  totalCSVUploads: number;
+  totalCSVIncrementPercent: number;
   feedbackIncrementPercent: number;
   positivePercentage: number;
   positiveIncrementPercent: number;
   top2Categories: { category: string; count: number; incrementPercent: number }[]
 }) {
-  const incrementSign = data.feedbackIncrementPercent >= 0 ? "+" : "";
+  const csvIncrementSign = data.totalCSVIncrementPercent >= 0 ? "+" : "";
 
   const getCategoryIcon = (category: string) => {
     const iconMap: Record<string, JSX.Element> = {
@@ -190,16 +215,27 @@ function getStats(data: {
 
   const stats = [
     {
-      label: "Total Feedbacks",
-      value: data.totalFeedbacks.toLocaleString(),
-      change: `${incrementSign}${data.feedbackIncrementPercent}%`,
-      changeType: data.feedbackIncrementPercent >= 0 ? "positive" : "negative",
+      label: "Total CSV's Uploaded",
+      value: data.totalCSVUploads.toLocaleString(),
+      change: `${csvIncrementSign}${data.totalCSVIncrementPercent}%`,
+      changeType: data.totalCSVIncrementPercent >= 0 ? "positive" : "negative",
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
         </svg>
       ),
     },
+    // {
+    //   label: "Total Feedbacks",
+    //   value: data.totalFeedbacks.toLocaleString(),
+    //   change: `${incrementSign}${data.feedbackIncrementPercent}%`,
+    //   changeType: data.feedbackIncrementPercent >= 0 ? "positive" : "negative",
+    //   icon: (
+    //     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    //       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+    //     </svg>
+    //   ),
+    // },
     {
       label: "Positive Sentiment",
       value: `${data.positivePercentage}%`,
@@ -265,8 +301,8 @@ export default async function Dashboard() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/");
 
-  const { totalFeedbacks, feedbackIncrementPercent, positivePercentage, positiveIncrementPercent, top2Categories, recentFeedback, categoryCounts } = await getDashboardData(session.user.organizationId);
-  const stats = getStats({ totalFeedbacks, feedbackIncrementPercent, positivePercentage, positiveIncrementPercent, top2Categories });
+  const { totalFeedbacks,totalCSVUploads, totalCSVIncrementPercent, feedbackIncrementPercent, positivePercentage, positiveIncrementPercent, top2Categories, recentFeedback, categoryCounts } = await getDashboardData(session.user.organizationId);
+  const stats = getStats({ totalFeedbacks,totalCSVUploads, totalCSVIncrementPercent, feedbackIncrementPercent, positivePercentage, positiveIncrementPercent, top2Categories });
 
   // Calculate category distribution dynamically
   const categoryDistribution = categoryCounts.map(cat => {

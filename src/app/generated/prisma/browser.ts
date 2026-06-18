@@ -32,3 +32,8 @@ export type Organization = Prisma.OrganizationModel
  * 
  */
 export type Feedback = Prisma.FeedbackModel
+/**
+ * Model CsvUpload
+ * 
+ */
+export type CsvUpload = Prisma.CsvUploadModel
