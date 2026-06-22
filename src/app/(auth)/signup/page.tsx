@@ -182,8 +182,8 @@ export default function SignUpPage() {
                     {field.label}
                   </label>
                   <div className={`relative rounded-xl border transition-all duration-500 ${focusedField === field.fieldKey
-                      ? "border-indigo-500/50 dark:border-indigo-400/30 shadow-[0_0_20px_-5px_rgba(99,102,241,0.2)]"
-                      : "border-zinc-200 dark:border-white/10 hover:border-zinc-300 dark:hover:border-white/15"
+                    ? "border-indigo-500/50 dark:border-indigo-400/30 shadow-[0_0_20px_-5px_rgba(99,102,241,0.2)]"
+                    : "border-zinc-200 dark:border-white/10 hover:border-zinc-300 dark:hover:border-white/15"
                     }`}>
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-zinc-400 dark:text-zinc-500">
                       {field.icon}

@@ -76,7 +76,7 @@ export default function Navbar() {
         : "-translate-y-full opacity-0"
       : "-translate-y-5 opacity-0",
     isScrolled
-      ? "border-b border-stone-200/70 bg-white/72 py-3 shadow-[0_20px_50px_-35px_rgba(67,56,202,0.45)] backdrop-blur-2xl dark:border-stone-800/70 dark:bg-[#050505]/80"
+      ? "border-b border-stone-200/70 bg-white/72 py-3 shadow-[0_20px_50px_-35px_rgba(67,56,202,0.45)] backdrop-blur-2xl dark:border-stone-800/70 dark:bg-[#050505]/30"
       : "bg-transparent py-5",
   ].join(" ");
 
@@ -99,7 +99,7 @@ export default function Navbar() {
             <Link
               key={item.href}
               href={item.href}
-              className="text-sm font-medium text-zinc-600 transition-colors hover:text-stone-900 dark:text-zinc-400 dark:hover:text-white"
+              className="text-sm text-zinc-600 transition-colors hover:text-stone-900 dark:text-zinc-400 dark:hover:text-white"
             >
               {item.label}
             </Link>
@@ -129,7 +129,7 @@ export default function Navbar() {
             <div className="flex items-center gap-3">
               <Link
                 href="/signin"
-                className="rounded-full px-4 py-2.5 text-sm font-semibold text-zinc-600 transition-colors hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-white"
+                className="rounded-full px-4 py-2.5 text-sm text-zinc-600 transition-colors hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-white"
               >
                 Sign In
               </Link>

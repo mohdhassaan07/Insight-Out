@@ -46,7 +46,7 @@ export default function SignInPage() {
 
       <div className="relative z-10 w-full max-w-md">
         {/* Logo */}
-        <div className="text-center mb-5">
+        <div className="text-center mb-10">
           <Link href="/" className="inline-flex items-center gap-3 group">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-stone-200/80 bg-white/70 text-stone-900 shadow-[0_10px_30px_-18px_rgba(67,56,202,0.7)] backdrop-blur-xl dark:border-white/10 dark:bg-white/5 dark:text-white transition-transform duration-500 group-hover:scale-110">
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
