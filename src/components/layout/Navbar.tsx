@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 const navLinks = [
   { href: "#features", label: "Features" },
@@ -31,25 +31,12 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isReady, setIsReady] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
-  const lastScrollY = useRef(0);
 
   useEffect(() => {
     setIsReady(true);
 
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      setIsScrolled(currentScrollY > 16);
-
-      if (currentScrollY < 16) {
-        setIsVisible(true);
-      } else if (currentScrollY > lastScrollY.current) {
-        setIsVisible(false);
-      } else {
-        setIsVisible(true);
-      }
-
-      lastScrollY.current = currentScrollY;
+      setIsScrolled(window.scrollY > 16);
     };
 
     handleScroll();
@@ -70,13 +57,9 @@ export default function Navbar() {
 
   const navClassName = [
     "fixed top-0 left-0 right-0 z-50 w-full transition-all duration-500",
-    isReady
-      ? isVisible
-        ? "translate-y-0 opacity-100"
-        : "-translate-y-full opacity-0"
-      : "-translate-y-5 opacity-0",
+    isReady ? "translate-y-0 opacity-100" : "-translate-y-5 opacity-0",
     isScrolled
-      ? "border-b border-stone-200/70 bg-white/72 py-3 shadow-[0_20px_50px_-35px_rgba(67,56,202,0.45)] backdrop-blur-2xl dark:border-stone-800/70 dark:bg-[#050505]/30"
+      ? "border-b border-stone-200/70 bg-white/72 py-3 shadow-[0_20px_50px_-35px_rgba(67,56,202,0.45)] backdrop-blur-2xl dark:border-stone-800/70 dark:bg-[#050505]/40"
       : "bg-transparent py-5",
   ].join(" ");
 
@@ -99,7 +82,7 @@ export default function Navbar() {
             <Link
               key={item.href}
               href={item.href}
-              className="text-sm text-zinc-600 transition-colors hover:text-stone-900 dark:text-zinc-400 dark:hover:text-white"
+              className="text-sm font-medium text-zinc-600 transition-colors hover:text-stone-900 dark:text-zinc-400 dark:hover:text-white"
             >
               {item.label}
             </Link>
@@ -129,7 +112,7 @@ export default function Navbar() {
             <div className="flex items-center gap-3">
               <Link
                 href="/signin"
-                className="rounded-full px-4 py-2.5 text-sm text-zinc-600 transition-colors hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-white"
+                className="rounded-full px-4 py-2.5 text-sm font-semibold text-zinc-600 transition-colors hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-white"
               >
                 Sign In
               </Link>
