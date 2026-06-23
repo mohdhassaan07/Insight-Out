@@ -59,3 +59,8 @@ export type Feedback = Prisma.FeedbackModel
  * 
  */
 export type CsvUpload = Prisma.CsvUploadModel
+/**
+ * Model Keyword
+ * 
+ */
+export type Keyword = Prisma.KeywordModel

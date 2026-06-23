@@ -45,37 +45,60 @@ Confidence meaning:
 0.0–0.2 unclear
 
 Format:
-[
-  { "feedback": "...", "category": "...", "confidence": 0.0, "sentiment": "..." },
-]
+{
+  "feedbacks": [
+    {
+    "category": "...",
+    "confidence": 0.0,
+    "sentiment": "...",
+    "keywords": ["short, specific product topic", "another relevant topic"]
+    }
+  ]
+}
+
+Keyword rules:
+- Extract 1 to 3 of the most relevant product topics for each feedback.
+- Use short, lowercase phrases (one to three words), such as "dark mode" or "slow loading".
+- Do not include generic words such as "app", "feedback", "issue", "problem", "user", or sentiment words.
+- Do not repeat a keyword within the same feedback.
 
 Feedbacks:
 ${feedbacks.map((f, i) => `${i + 1}. ${f}`).join("\n")}
 `;
 }
 
-function extractJSON(text: string) {
+function extractJSON(text: string): unknown[] {
     // Remove ```json and ``` wrappers
     const cleaned = text
         .replace(/```json/g, "")
         .replace(/```/g, "")
         .trim();
 
-    return JSON.parse(cleaned);
+    const parsed: unknown = JSON.parse(cleaned);
+
+    if (
+        typeof parsed !== "object" ||
+        parsed === null ||
+        !Array.isArray((parsed as { feedbacks?: unknown }).feedbacks)
+    ) {
+        throw new Error("AI returned an invalid classification response");
+    }
+
+    return (parsed as { feedbacks: unknown[] }).feedbacks;
 }
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+// const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-async function classifyWithGemini(feedbacks: string[]) {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+// async function classifyWithGemini(feedbacks: string[]) {
+//     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    const prompt = buildPrompt(feedbacks);
+//     const prompt = buildPrompt(feedbacks);
 
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
+//     const result = await model.generateContent(prompt);
+//     const text = result.response.text();
 
-    return extractJSON(text);
-}
+//     return extractJSON(text);
+// }
 
 // using groqAi
 function getGroqChatCompletion(feedbacks: string[]) {
@@ -89,12 +112,15 @@ function getGroqChatCompletion(feedbacks: string[]) {
             },
         ],
         model: "openai/gpt-oss-20b",
+        // JSON mode prevents unescaped quotes/newlines in model output from
+        // breaking JSON.parse.
+        response_format: { type: "json_object" },
     });
 }
 
 async function classifyWithGroq(feedbacks: string[]) {
     const response = await getGroqChatCompletion(feedbacks);
-    const text = response.choices[0]?.message?.content ?? "[]";
+    const text = response.choices[0]?.message?.content ?? "{\"feedbacks\": []}";
     return extractJSON(text);
 }
 
@@ -112,6 +138,39 @@ function arrayChunks<T>(arr: T[], size: number): T[][] {
         chunks.push(arr.slice(i, i + size));
     }
     return chunks;
+}
+
+function normalizeKeyword(keyword: unknown): string | null {
+    if (typeof keyword !== "string") return null;
+
+    const normalized = keyword
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 80);
+
+    return normalized.length >= 2 ? normalized : null;
+}
+
+function countKeywords(classifiedFeedback: any[]): Map<string, number> {
+    const keywordCounts = new Map<string, number>();
+
+    for (const feedback of classifiedFeedback) {
+        const keywords: unknown[] = Array.isArray(feedback.keywords) ? feedback.keywords : [];
+        const uniqueKeywords = new Set(
+            keywords
+                .map(normalizeKeyword)
+                .filter((keyword): keyword is string => keyword !== null)
+        );
+
+        // Count a keyword once per feedback, even if the AI repeats it in its response.
+        for (const keyword of uniqueKeywords) {
+            keywordCounts.set(keyword, (keywordCounts.get(keyword) ?? 0) + 1);
+        }
+    }
+
+    return keywordCounts;
 }
 
 export async function POST(req: Request) {
@@ -182,7 +241,8 @@ export async function POST(req: Request) {
         }
 
         const batches = arrayChunks(rows, 10);
-        const finalResults: any = [];
+        const finalResults: any[] = [];
+        const classifiedFeedback: any[] = [];
 
         for (const batch of batches) {
             const texts = batch.map(b => b.feedback); // only text to AI
@@ -190,6 +250,9 @@ export async function POST(req: Request) {
 
             // merge AI result + source
             classified.forEach((ai: any, index: number) => {
+                if (!batch[index]) return;
+
+                classifiedFeedback.push(ai);
                 finalResults.push({
                     id: uuidv7(),
                     feedback_text: batch[index].feedback,
@@ -202,14 +265,14 @@ export async function POST(req: Request) {
                 });
             });
         }
-        console.log("Final Results:", finalResults);
-        // Store results in the database
+        const keywordCounts = countKeywords(classifiedFeedback);
 
-        const [feedbackdata, orgData] =  await Promise.all([
+        // Store feedback, upload metadata, and keyword counts together.
+        const [feedbackdata] = await Promise.all([
             prisma.feedback.createMany({
                 data: finalResults,
                 skipDuplicates: true,
-            }), 
+            }),
             prisma.organization.update({
                 where: { id: session.user.organizationId },
                 data: { totalCSVUploads: { increment: 1 } }
@@ -218,11 +281,31 @@ export async function POST(req: Request) {
                 data: {
                     organizationId: session.user.organizationId,
                 }
-            })
-        ])
-        return NextResponse.json({ data: feedbackdata }, { status: 200 });
+            }),
+            ...Array.from(keywordCounts, ([name, count]) =>
+                prisma.keyword.upsert({
+                    // The generated client gains this composite selector after the
+                    // accompanying Prisma migration is applied and generated.
+                    where: {
+                        organizationId: session.user.organizationId,
+                        name,
+                    } as any,
+                    create: {
+                        name,
+                        count,
+                        organizationId: session.user.organizationId,
+                    },
+                    update: {
+                        count: { increment: count },
+                    },
+                })
+            ),
+        ]);
+        console.log("keywords", keywordCounts);
+        return NextResponse.json({ data: feedbackdata, keywordsExtracted: keywordCounts.size }, { status: 200 });
 
     } catch (error: any) {
+        console.error(error)
         return NextResponse.json(
             { error: error.message },
             { status: 500 }

@@ -28,6 +28,7 @@ model Organization{
   users       User[]
   feedbacks   Feedback[]
   csvUploads  CsvUpload[]
+  keywords Keyword[]
 }
 
 model Feedback {
@@ -51,6 +52,18 @@ model CsvUpload {
   createdAt      DateTime     @default(now())
 
   @@index([organizationId, createdAt])
+}
+
+model Keyword {
+  id        String   @id @default(uuid())
+  name      String
+  count     Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  organizationId  String
+  organization  Organization  @relation(fields : [organizationId], references : [id])
+  @@index([organizationId])
+  @@unique([organizationId, name])
 }
 
 enum Plan{

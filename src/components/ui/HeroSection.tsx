@@ -9,21 +9,27 @@ interface HeroSectionProps {
 
 // Animated floating particles
 function Particles() {
+  const [particles, setParticles] = useState<React.CSSProperties[]>([]);
+
+  useEffect(() => {
+    setParticles(
+      Array.from({ length: 30 }).map(() => ({
+        width: `${Math.random() * 3 + 1}px`,
+        height: `${Math.random() * 3 + 1}px`,
+        left: `${Math.random() * 100}%`,
+        top: `${Math.random() * 100}%`,
+        animationDelay: `${Math.random() * 8}s`,
+        animationDuration: `${Math.random() * 6 + 6}s`,
+      }))
+    );
+  }, []);
+
+  if (particles.length === 0) return null;
+
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {Array.from({ length: 30 }).map((_, i) => (
-        <div
-          key={i}
-          className="hero-particle absolute rounded-full"
-          style={{
-            width: `${Math.random() * 3 + 1}px`,
-            height: `${Math.random() * 3 + 1}px`,
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 8}s`,
-            animationDuration: `${Math.random() * 6 + 6}s`,
-          }}
-        />
+      {particles.map((style, i) => (
+        <div key={i} className="hero-particle absolute rounded-full" style={style} />
       ))}
     </div>
   );

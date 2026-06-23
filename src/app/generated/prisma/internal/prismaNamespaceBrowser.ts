@@ -54,7 +54,8 @@ export const ModelName = {
   User: 'User',
   Organization: 'Organization',
   Feedback: 'Feedback',
-  CsvUpload: 'CsvUpload'
+  CsvUpload: 'CsvUpload',
+  Keyword: 'Keyword'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -120,6 +121,18 @@ export const CsvUploadScalarFieldEnum = {
 } as const
 
 export type CsvUploadScalarFieldEnum = (typeof CsvUploadScalarFieldEnum)[keyof typeof CsvUploadScalarFieldEnum]
+
+
+export const KeywordScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  count: 'count',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  organizationId: 'organizationId'
+} as const
+
+export type KeywordScalarFieldEnum = (typeof KeywordScalarFieldEnum)[keyof typeof KeywordScalarFieldEnum]
 
 
 export const SortOrder = {

@@ -387,7 +387,8 @@ export const ModelName = {
   User: 'User',
   Organization: 'Organization',
   Feedback: 'Feedback',
-  CsvUpload: 'CsvUpload'
+  CsvUpload: 'CsvUpload',
+  Keyword: 'Keyword'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -403,7 +404,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "organization" | "feedback" | "csvUpload"
+    modelProps: "user" | "organization" | "feedback" | "csvUpload" | "keyword"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -703,6 +704,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    Keyword: {
+      payload: Prisma.$KeywordPayload<ExtArgs>
+      fields: Prisma.KeywordFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.KeywordFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeywordPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.KeywordFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeywordPayload>
+        }
+        findFirst: {
+          args: Prisma.KeywordFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeywordPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.KeywordFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeywordPayload>
+        }
+        findMany: {
+          args: Prisma.KeywordFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeywordPayload>[]
+        }
+        create: {
+          args: Prisma.KeywordCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeywordPayload>
+        }
+        createMany: {
+          args: Prisma.KeywordCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.KeywordCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeywordPayload>[]
+        }
+        delete: {
+          args: Prisma.KeywordDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeywordPayload>
+        }
+        update: {
+          args: Prisma.KeywordUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeywordPayload>
+        }
+        deleteMany: {
+          args: Prisma.KeywordDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.KeywordUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.KeywordUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeywordPayload>[]
+        }
+        upsert: {
+          args: Prisma.KeywordUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$KeywordPayload>
+        }
+        aggregate: {
+          args: Prisma.KeywordAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateKeyword>
+        }
+        groupBy: {
+          args: Prisma.KeywordGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.KeywordGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.KeywordCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.KeywordCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -789,6 +864,18 @@ export const CsvUploadScalarFieldEnum = {
 } as const
 
 export type CsvUploadScalarFieldEnum = (typeof CsvUploadScalarFieldEnum)[keyof typeof CsvUploadScalarFieldEnum]
+
+
+export const KeywordScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  count: 'count',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  organizationId: 'organizationId'
+} as const
+
+export type KeywordScalarFieldEnum = (typeof KeywordScalarFieldEnum)[keyof typeof KeywordScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1031,6 +1118,7 @@ export type GlobalOmitConfig = {
   organization?: Prisma.OrganizationOmit
   feedback?: Prisma.FeedbackOmit
   csvUpload?: Prisma.CsvUploadOmit
+  keyword?: Prisma.KeywordOmit
 }
 
 /* Types for Logging */

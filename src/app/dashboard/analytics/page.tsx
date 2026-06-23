@@ -1,11 +1,12 @@
 "use client";
 import DashboardLayout from "@/src/components/layout/DashboardLayout";
 import Card, { CardContent, CardHeader } from "@/src/components/ui/Card";
-import { LoadingCard } from "@/src/components/ui/Loading";
+import { LoadingCard, LoadingSkeleton } from "@/src/components/ui/Loading";
 import { usefeedbackStore } from "@/src/store/feedbackStore";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+
 const categoryData = [
   { label: "Feature Request", value: 245, color: "bg-indigo-500" },
   { label: "Bug", value: 89, color: "bg-red-500" },
@@ -42,7 +43,10 @@ export default function AnalyticsPage() {
     setcategoryCounts(res.data.categories);
   }
 
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
+    setMounted(true);
     fetchAllFeedbacks();
     fetchCategories();
   }, []);
@@ -258,7 +262,21 @@ export default function AnalyticsPage() {
           </Card>
         </div>
 
-        {feedbacks.length > 0 ?
+        {!mounted || loading ? (
+          <div>
+            <div className="grid lg:grid-cols-2 gap-8 mb-8">
+              <Card className="h-[350px] animate-pulse bg-zinc-50 dark:bg-zinc-800/20" ><div></div></Card>
+              <Card className="h-[350px] animate-pulse bg-zinc-50 dark:bg-zinc-800/20" ><div></div></Card>
+
+            </div>
+            <div className="grid lg:grid-cols-2 gap-8">
+              <Card className="h-[350px] animate-pulse bg-zinc-50 dark:bg-zinc-800/20" ><div></div></Card>
+
+              <Card className="h-[350px] animate-pulse bg-zinc-50 dark:bg-zinc-800/20" ><div></div></Card>
+
+            </div>
+          </div>
+        ) : feedbacks.length > 0 ? (
           <div>
             <div className="grid lg:grid-cols-2 gap-8 mb-8">
               {/* Sentiment Breakdown */}
@@ -362,27 +380,22 @@ export default function AnalyticsPage() {
                   </h2>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {loading ? (
-                    <LoadingCard />
-                  ) : (
-                    categoryDistribution.map((category, index) => (
-                      <div key={index}>
-                        <div className="flex items-center justify-between text-sm mb-1">
-                          <span className="text-zinc-700 dark:text-zinc-300">{category.name}</span>
-                          <span className="text-zinc-500">
-                            {category.count} ({category.percentage}%)
-                          </span>
-                        </div>
-                        <div className="h-2.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full ${category.color} rounded-full transition-all duration-500`}
-                            style={{ width: `${category.percentage}%` }}
-                          />
-                        </div>
+                  {categoryDistribution.map((category, index) => (
+                    <div key={index}>
+                      <div className="flex items-center justify-between text-sm mb-1">
+                        <span className="text-zinc-700 dark:text-zinc-300">{category.name}</span>
+                        <span className="text-zinc-500">
+                          {category.count} ({category.percentage}%)
+                        </span>
                       </div>
-                    ))
-                  )}
-
+                      <div className="h-2.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${category.color} rounded-full transition-all duration-500`}
+                          style={{ width: `${category.percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
 
@@ -421,7 +434,7 @@ export default function AnalyticsPage() {
                 </CardContent>
               </Card>
             </div>
-          </div>
+          </div>)
           : <Card>
             <CardContent className="p-6">
               <div className="flex flex-col items-center justify-center py-12">
