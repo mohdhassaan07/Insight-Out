@@ -32,6 +32,7 @@ Classify each feedback into ONE category and assign sentiment (Positive, Neutral
 ${CATEGORIES.join(", ")}
 
 STRICT RULES:
+- Category should be capitalized strictly the same as the CATEGORIES array
 - Return ONLY valid JSON
 - NO markdown
 - NO explanations

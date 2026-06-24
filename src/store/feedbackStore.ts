@@ -31,11 +31,13 @@ type FeedbackStore = {
     updateApprovestatus: (id: string) => void,
     updateCategory: (id: string, category: string) => void,
     updateFeedbackFields: (id: string, fields: { primary_category?: string; sentiment?: string; source?: string }) => void
+    keywords: Array<any>,
 }
 
 export const usefeedbackStore = create<FeedbackStore>((set, get) => ({
     feedbacks: [],
     allFeedbacks: [],
+    keywords: [],
     loading: false,
     loadingMore: false,
     page: 1,
@@ -98,6 +100,7 @@ export const usefeedbackStore = create<FeedbackStore>((set, get) => ({
             const res = await axios.get("/api/v1/fetchAllFeedbacks")
             set({
                 allFeedbacks: res.data.feedbacks,
+                keywords: res.data.keywords,
                 loading: false
             })
         } catch (error) {

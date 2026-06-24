@@ -37,6 +37,7 @@ export default function AnalyticsPage() {
   const fetchAllFeedbacks = usefeedbackStore(state => state.fetchAllFeedbacks);
   const loading = usefeedbackStore(state => state.loading);
   const feedbacks = usefeedbackStore(state => state.allFeedbacks);
+  const topKeywords = usefeedbackStore(state => state.keywords);
 
   async function fetchCategories() {
     const res = await axios.get('/api/v1/getCategory');
@@ -410,25 +411,16 @@ export default function AnalyticsPage() {
                   <div className="flex flex-wrap gap-2">
                     {topKeywords.map((keyword) => (
                       <div
-                        key={keyword.word}
-                        className={`
-                      px-3 py-1.5 rounded-full text-sm font-medium
-                      ${keyword.sentiment === "positive"
-                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                            : keyword.sentiment === "negative"
-                              ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                              : "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-                          }
-                    `}
-                      >
-                        {keyword.word}
+                        key={keyword.id}
+                        className={`px-3 py-1.5 rounded-full text-sm font-medium bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300`}>
+                        {keyword.name}
                         <span className="ml-1 opacity-60">({keyword.count})</span>
                       </div>
                     ))}
                   </div>
                   <div className="mt-6 pt-4 border-t border-zinc-200 dark:border-zinc-800">
                     <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                      Keywords are extracted automatically from feedback and colored by sentiment.
+                      Keywords are extracted automatically from feedbacks.
                     </p>
                   </div>
                 </CardContent>

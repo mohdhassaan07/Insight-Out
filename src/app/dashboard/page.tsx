@@ -301,8 +301,8 @@ export default async function Dashboard() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/");
 
-  const { totalFeedbacks,totalCSVUploads, totalCSVIncrementPercent, feedbackIncrementPercent, positivePercentage, positiveIncrementPercent, top2Categories, recentFeedback, categoryCounts } = await getDashboardData(session.user.organizationId);
-  const stats = getStats({ totalFeedbacks,totalCSVUploads, totalCSVIncrementPercent, feedbackIncrementPercent, positivePercentage, positiveIncrementPercent, top2Categories });
+  const { totalFeedbacks, totalCSVUploads, totalCSVIncrementPercent, feedbackIncrementPercent, positivePercentage, positiveIncrementPercent, top2Categories, recentFeedback, categoryCounts } = await getDashboardData(session.user.organizationId);
+  const stats = getStats({ totalFeedbacks, totalCSVUploads, totalCSVIncrementPercent, feedbackIncrementPercent, positivePercentage, positiveIncrementPercent, top2Categories });
 
   // Calculate category distribution dynamically
   const categoryDistribution = categoryCounts.map(cat => {
@@ -334,15 +334,16 @@ export default async function Dashboard() {
           <div>
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
               Welcome back!
-              {/* <span className="bg-linear-to-r from-indigo-500 to-purple-600 font-extrabold bg-clip-text text-transparent">{session.user.organizationName}</span> */}
             </h1>
             <p className="text-zinc-600 dark:text-zinc-400 mt-1">
-              Here&apos;s what&apos;s happening with your feedback today.
+              Here&apos;s what&apos;s happening with your feedback today at{" "}
+              <span className="font-bold text-zinc-900 dark:text-white">{session.user.organizationName}</span>.
             </p>
           </div>
           <div className="mt-4 md:mt-0 flex gap-3">
+            <GenerateSummaryButton />
             <Link href="/dashboard/upload">
-              <Button variant="outline">
+              <Button>
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                 </svg>
@@ -350,7 +351,7 @@ export default async function Dashboard() {
               </Button>
             </Link>
             <Link href="/dashboard/feedbacks">
-              <Button variant="outline">
+              <Button>
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -358,7 +359,6 @@ export default async function Dashboard() {
                 View All
               </Button>
             </Link>
-            <GenerateSummaryButton />
           </div>
         </div>
 
