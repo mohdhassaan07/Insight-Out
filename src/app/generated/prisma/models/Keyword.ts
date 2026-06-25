@@ -239,16 +239,17 @@ export type KeywordOrderByWithRelationInput = {
 
 export type KeywordWhereUniqueInput = Prisma.AtLeast<{
   id?: string
-  name?: string
+  organizationId_name?: Prisma.KeywordOrganizationIdNameCompoundUniqueInput
   AND?: Prisma.KeywordWhereInput | Prisma.KeywordWhereInput[]
   OR?: Prisma.KeywordWhereInput[]
   NOT?: Prisma.KeywordWhereInput | Prisma.KeywordWhereInput[]
+  name?: Prisma.StringFilter<"Keyword"> | string
   count?: Prisma.IntFilter<"Keyword"> | number
   createdAt?: Prisma.DateTimeFilter<"Keyword"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Keyword"> | Date | string
   organizationId?: Prisma.StringFilter<"Keyword"> | string
   organization?: Prisma.XOR<Prisma.OrganizationScalarRelationFilter, Prisma.OrganizationWhereInput>
-}, "id" | "name">
+}, "id" | "organizationId_name">
 
 export type KeywordOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -346,6 +347,11 @@ export type KeywordListRelationFilter = {
 
 export type KeywordOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
+}
+
+export type KeywordOrganizationIdNameCompoundUniqueInput = {
+  organizationId: string
+  name: string
 }
 
 export type KeywordCountOrderByAggregateInput = {

@@ -285,12 +285,12 @@ export async function POST(req: Request) {
             }),
             ...Array.from(keywordCounts, ([name, count]) =>
                 prisma.keyword.upsert({
-                    // The generated client gains this composite selector after the
-                    // accompanying Prisma migration is applied and generated.
                     where: {
-                        organizationId: session.user.organizationId,
-                        name,
-                    } as any,
+                        organizationId_name: {
+                            organizationId: session.user.organizationId,
+                            name,
+                        },
+                    },
                     create: {
                         name,
                         count,
