@@ -107,10 +107,10 @@ export default function UploadPage() {
       const csvText = await selectedFile.text();
       const feedbackCount = countValidFeedbackRows(csvText);
 
-      if (feedbackCount > 200) {
+      if (feedbackCount > 100) {
         setFile(null);
         setUploadStatus("error");
-        setMessage(`Maximum 200 feedbacks can be uploaded at once.`);
+        setMessage(`Maximum 100 feedbacks can be uploaded at once.`);
         return false;
       }
 
@@ -233,8 +233,8 @@ export default function UploadPage() {
                   onClick={() => fileInputRef.current?.click()}
                   className={`
                     relative border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all duration-200
-                    ${isDragging 
-                      ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20" 
+                    ${isDragging
+                      ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20"
                       : "border-zinc-300 dark:border-zinc-700 hover:border-indigo-400 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
                     }
                     ${file ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20" : ""}
@@ -247,7 +247,7 @@ export default function UploadPage() {
                     onChange={handleFileSelect}
                     className="hidden"
                   />
-                  
+
                   {file ? (
                     <div className="space-y-4">
                       <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto">
@@ -259,7 +259,7 @@ export default function UploadPage() {
                         <p className="text-lg font-medium text-zinc-900 dark:text-white">{file.name}</p>
                         <p className="text-sm text-zinc-500 mt-1">{(file.size / 1024).toFixed(2)} KB</p>
                       </div>
-                      <button 
+                      <button
                         onClick={(e) => { e.stopPropagation(); resetUpload(); }}
                         className="text-sm text-red-600 hover:text-red-500 font-medium"
                       >
@@ -278,7 +278,7 @@ export default function UploadPage() {
                           Drop your CSV file here, or <span className="text-indigo-600">browse</span>
                         </p>
                         <p className="text-sm text-zinc-500 mt-1">
-                          Supports CSV files up to 5MB and 200 feedback rows
+                          Supports CSV files up to 5MB and 100 feedback rows
                         </p>
                       </div>
                     </div>
@@ -293,7 +293,7 @@ export default function UploadPage() {
                       <span className="text-zinc-900 dark:text-white font-medium">{uploadProgress}%</span>
                     </div>
                     <div className="h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                      <div 
+                      <div
                         className="h-full bg-linear-to-r from-indigo-600 to-purple-600 rounded-full transition-all duration-300"
                         style={{ width: `${uploadProgress}%` }}
                       />
@@ -303,11 +303,10 @@ export default function UploadPage() {
 
                 {/* Status Message */}
                 {uploadStatus !== "idle" && (
-                  <div className={`mt-6 p-4 rounded-lg ${
-                    uploadStatus === "success" 
-                      ? "bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800" 
-                      : "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
-                  }`}>
+                  <div className={`mt-6 p-4 rounded-lg ${uploadStatus === "success"
+                    ? "bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800"
+                    : "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
+                    }`}>
                     <div className="flex items-center gap-3">
                       {uploadStatus === "success" ? (
                         <svg className="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
@@ -318,11 +317,10 @@ export default function UploadPage() {
                           <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                         </svg>
                       )}
-                      <p className={`text-sm ${
-                        uploadStatus === "success" 
-                          ? "text-emerald-700 dark:text-emerald-300" 
-                          : "text-red-700 dark:text-red-300"
-                      }`}>
+                      <p className={`text-sm ${uploadStatus === "success"
+                        ? "text-emerald-700 dark:text-emerald-300"
+                        : "text-red-700 dark:text-red-300"
+                        }`}>
                         {message}
                       </p>
                     </div>

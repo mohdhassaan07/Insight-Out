@@ -10,7 +10,7 @@ import { uploadLimiter } from "@/src/lib/rateLimiter";
 import Groq from "groq-sdk";
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-const MAX_FEEDBACKS_PER_UPLOAD = 200;
+const MAX_FEEDBACKS_PER_UPLOAD = 100;
 
 function buildPrompt(feedbacks: string[]) {
     const CATEGORIES = [

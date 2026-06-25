@@ -116,7 +116,7 @@ export default async function Home() {
 
   return (
     <AuthProvider>
-      <div className="min-h-screen  bg-white dark:bg-[#050505] text-zinc-900 dark:text-zinc-50 selection:bg-indigo-500/30 overflow-hidden font-sans transition-colors duration-500">
+      <div className="min-h-screen rmv-scrollbar bg-white dark:bg-[#050505] text-zinc-900 dark:text-zinc-50 selection:bg-indigo-500/30 overflow-hidden font-sans transition-colors duration-500">
         {/* Navbar */}
         <div className="absolute top-0 w-full z-50">
           <Navbar />

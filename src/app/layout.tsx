@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/src/components/providers/AuthProvider";
 import { ToastProvider } from "@/src/components/providers/ToastProvider";
-  
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -19,13 +19,15 @@ export const metadata: Metadata = {
   description: "Transform unstructured customer feedback into actionable insights with AI-powered categorization and sentiment analysis.",
 };
 
+const isProduction = process.env.NODE_ENV === "production";
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={isProduction ? "prod" : ""} suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
