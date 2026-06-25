@@ -269,40 +269,50 @@ export async function POST(req: Request) {
         const keywordCounts = countKeywords(classifiedFeedback);
 
         // Store feedback, upload metadata, and keyword counts together.
-        const [feedbackdata] = await Promise.all([
-            prisma.feedback.createMany({
-                data: finalResults,
-                skipDuplicates: true,
-            }),
-            prisma.organization.update({
-                where: { id: session.user.organizationId },
-                data: { totalCSVUploads: { increment: 1 } }
-            }),
-            prisma.csvUpload.create({
-                data: {
-                    organizationId: session.user.organizationId,
-                }
-            }),
-            ...Array.from(keywordCounts, ([name, count]) =>
-                prisma.keyword.upsert({
-                    where: {
-                        organizationId_name: {
+        const feedbackdata = await prisma.$transaction(
+            async (tx) => {
+                const createdFeedback = await tx.feedback.createMany({
+                    data: finalResults,
+                    skipDuplicates: true,
+                });
+
+                await Promise.all([
+                    tx.organization.update({
+                        where: { id: session.user.organizationId },
+                        data: { totalCSVUploads: { increment: 1 } }
+                    }),
+                    tx.csvUpload.create({
+                        data: {
                             organizationId: session.user.organizationId,
-                            name,
-                        },
-                    },
-                    create: {
-                        name,
-                        count,
-                        organizationId: session.user.organizationId,
-                    },
-                    update: {
-                        count: { increment: count },
-                    },
-                })
-            ),
-        ]);
-        console.log("keywords", keywordCounts);
+                        }
+                    }),
+                    ...Array.from(keywordCounts, ([name, count]) =>
+                        tx.keyword.upsert({
+                            where: {
+                                organizationId_name: {
+                                    organizationId: session.user.organizationId,
+                                    name,
+                                },
+                            },
+                            create: {
+                                name,
+                                count,
+                                organizationId: session.user.organizationId,
+                            },
+                            update: {
+                                count: { increment: count },
+                            },
+                        })
+                    ),
+                ]);
+
+                return createdFeedback;
+            },
+            {
+                maxWait: 10000,
+                timeout: 60000,
+            }
+        );
         return NextResponse.json({ data: feedbackdata, keywordsExtracted: keywordCounts.size }, { status: 200 });
 
     } catch (error: any) {
