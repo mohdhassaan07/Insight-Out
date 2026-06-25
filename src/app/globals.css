@@ -327,3 +327,17 @@ body {
 .animate-shimmer {
   animation: shimmer 1.5s ease-in-out infinite;
 }
+
+/* Mobile sidebar slide-in */
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-sidebar {
+  animation: slideInFromLeft 0.25s ease-out;
+}

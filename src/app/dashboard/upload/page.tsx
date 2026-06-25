@@ -353,6 +353,16 @@ export default function UploadPage() {
           {/* Instructions */}
           <div>
             <Card>
+              <div className="pt-4 mx-5 border-t border-zinc-200 dark:border-zinc-800">
+                <div className="flex gap-2.5 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800/30">
+                  <svg className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                    Insight-Out is currently optimized for analyzing software product feedback (apps and websites). Support for additional feedback domains is planned in future releases.
+                  </p>
+                </div>
+              </div>
               <CardHeader>
                 <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
                   CSV Format
@@ -407,6 +417,8 @@ export default function UploadPage() {
                     </li>
                   </ul>
                 </div>
+
+
               </CardContent>
             </Card>
           </div>

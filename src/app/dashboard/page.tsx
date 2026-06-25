@@ -328,7 +328,7 @@ export default async function Dashboard() {
 
   return (
     <DashboardLayout>
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div>
@@ -340,7 +340,7 @@ export default async function Dashboard() {
               <span className="font-bold text-zinc-900 dark:text-white">{session.user.organizationName}</span>.
             </p>
           </div>
-          <div className="mt-4 md:mt-0 flex gap-3">
+          <div className="mt-4 md:mt-0 flex flex-wrap gap-3">
             <GenerateSummaryButton />
             <Link href="/dashboard/upload">
               <Button>

@@ -179,7 +179,7 @@ export default function AnalyticsPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
@@ -321,7 +321,7 @@ export default function AnalyticsPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="flex justify-center gap-6">
+                  <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
                     {sentimentData.map((item) => (
                       <div key={item.label} className="flex items-center gap-2">
                         <div className={`w-3 h-3 rounded-full ${item.color}`} />

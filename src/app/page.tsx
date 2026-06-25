@@ -79,7 +79,7 @@ const steps = [
   {
     number: "01",
     title: "Upload Feedback",
-    description: "Drop your CSV files or paste feedback directly. We support bulk imports of any size.",
+    description: "Drop your CSV files of App or Website Feedback directly. We support bulk imports of any size.",
   },
   {
     number: "02",

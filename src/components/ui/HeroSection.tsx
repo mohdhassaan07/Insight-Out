@@ -163,7 +163,7 @@ export default function HeroSection({ isAuthenticated }: HeroSectionProps) {
           className={`text-lg sm:text-xl text-zinc-500 dark:text-zinc-400 font-light max-w-2xl mx-auto leading-relaxed mb-14 transition-all duration-1000 delay-500 ${isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             }`}
         >
-          AI-powered categorization, sentiment analysis, and intelligent summaries — understand what your customers really want in seconds, not hours.
+          Analyze app and website feedback with AI. Automatically categorize product feedback, detect sentiment, and uncover actionable insights in seconds.
         </p>
 
         {/* CTA Buttons */}

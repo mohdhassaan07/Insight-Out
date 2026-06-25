@@ -4,6 +4,11 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { useState, useRef, useEffect } from "react";
 
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
 const navigation = [
   {
     name: "Dashboard",
@@ -53,7 +58,7 @@ const navigation = [
   },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -70,11 +75,23 @@ export default function Sidebar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 flex flex-col">
+  // Prevent body scroll when sidebar overlay is open on mobile
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
+  const sidebarContent = (
+    <>
       {/* Logo */}
-      <div className="h-16 flex items-center px-6 border-b border-zinc-200 dark:border-zinc-800">
-        <Link href="/" className="flex items-center gap-3">
+      <div className="h-16 flex items-center justify-between px-6 border-b border-zinc-200 dark:border-zinc-800">
+        <Link href="/" className="flex items-center gap-3" onClick={onClose}>
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-stone-200/80 bg-white/70 text-stone-900 shadow-[0_10px_30px_-18px_rgba(67,56,202,0.7)] backdrop-blur-xl dark:border-white/10 dark:bg-white/5 dark:text-white">
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -84,6 +101,16 @@ export default function Sidebar() {
             Insight-Out
           </span>
         </Link>
+        {/* Close button — mobile only */}
+        <button
+          onClick={onClose}
+          className="p-2 rounded-lg text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors lg:hidden"
+          aria-label="Close sidebar"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
 
       {/* Navigation */}
@@ -94,6 +121,7 @@ export default function Sidebar() {
             <Link
               key={item.name}
               href={item.href}
+              onClick={onClose}
               className={`
                 flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
                 ${isActive
@@ -116,7 +144,7 @@ export default function Sidebar() {
           <div className="absolute bottom-full left-3 right-3 mb-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg shadow-lg overflow-hidden z-50">
             <Link
               href="/dashboard/settings"
-              onClick={() => setMenuOpen(false)}
+              onClick={() => { setMenuOpen(false); onClose(); }}
               className="flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,7 +155,7 @@ export default function Sidebar() {
             </Link>
             <Link
               href="/dashboard/upgrade"
-              onClick={() => setMenuOpen(false)}
+              onClick={() => { setMenuOpen(false); onClose(); }}
               className="flex items-center gap-3 px-4 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -168,6 +196,30 @@ export default function Sidebar() {
           </svg>
         </button>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop sidebar — always visible on lg+ */}
+      <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-64 bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 flex-col z-40">
+        {sidebarContent}
+      </aside>
+
+      {/* Mobile sidebar overlay — visible when isOpen on <lg */}
+      {isOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={onClose}
+          />
+          {/* Sidebar panel */}
+          <aside className="absolute left-0 top-0 h-full w-72 bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 flex flex-col shadow-2xl animate-slide-in-sidebar">
+            {sidebarContent}
+          </aside>
+        </div>
+      )}
+    </>
   );
 }
