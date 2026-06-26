@@ -44,11 +44,13 @@ export async function POST(req: Request) {
             select: { role: true }
         });
 
-        if (isAdmin?.role=="Admin") {
+        if (isAdmin?.role == "Admin") {
             // If they are the only member, delete everything associated with the organization
             await prisma.$transaction([
                 prisma.feedback.deleteMany({ where: { organizationId: user.organizationId } }),
-                prisma.user.delete({ where: { email } }),
+                prisma.csvUpload.deleteMany({ where: { organizationId: user.organizationId } }),
+                prisma.keyword.deleteMany({ where: { organizationId: user.organizationId } }),
+                prisma.user.deleteMany({ where: { organizationId: user.organizationId } }),
                 prisma.organization.delete({ where: { id: user.organizationId } })
             ]);
         } else {
