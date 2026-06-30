@@ -4,79 +4,79 @@ import prisma from "@/src/lib/prisma";
 import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
-    session: {
-        strategy: "jwt"
-    },
-    providers: [
-        CredentialsProvider({
-            name: "Credentials",
-            credentials: {
-                email: {},
-                password: {}
-            },
-            async authorize(credentials) {
-                if (!credentials?.email || !credentials?.password) {
-                    throw new Error("Missing credentials");
-                }
-                console.log("Authorizing user with email:", credentials.email);
-                const user = await prisma.user.findUnique({
-                    where: { email: credentials.email }
-                });
-                const organization = await prisma.organization.findUnique({
-                    where: { id: user?.organizationId }
-                });
-
-
-                if (!user || !user.password) {
-                    throw new Error("User not found");
-                }
-
-                const isValid = await bcrypt.compare(
-                    credentials.password,
-                    user.password
-                );
-
-                if (!isValid) {
-                    throw new Error("Invalid password");
-                }
-
-                return {
-                    id: user.id,
-                    name: user.name,
-                    email: user.email,
-                    profilePic: user.profilePic ?? "",
-                    organizationId: user.organizationId,
-                    role: user.role,
-                    organizationName: organization?.name || "Unknown Organization"
-                };
-            }
-        })
-    ],
-    callbacks: {
-        jwt({ token, user }) {
-            if (user) {
-                token.name = user.name;
-                token.email = user.email;
-                token.organizationId = user.organizationId;
-                token.role = user.role;
-                token.profilePic = user.profilePic as string;
-                token.organizationName = user.organizationName;
-            }
-            return token;
-        },
-        session({ session, token }) {
-            session.user.name = token.name as string;
-            session.user.email = token.email as string;
-            session.user.organizationId = token.organizationId as string;
-            session.user.role = token.role as string;
-            session.user.profilePic = token.profilePic as string;
-            session.user.organizationName = token.organizationName as string;
-            return session;
+  session: {
+    strategy: "jwt"
+  },
+  providers: [
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        email: {},
+        password: {}
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Missing credentials");
         }
+        console.log("Authorizing user with email:", credentials.email);
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email }
+        });
+        const organization = await prisma.organization.findUnique({
+          where: { id: user?.organizationId }
+        });
+
+
+        if (!user || !user.password) {
+          throw new Error("User not found");
+        }
+
+        const isValid = await bcrypt.compare(
+          credentials.password,
+          user.password
+        );
+
+        if (!isValid) {
+          throw new Error("Invalid password");
+        }
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          profilePic: user.profilePic ?? "",
+          organizationId: user.organizationId,
+          role: user.role,
+          organizationName: organization?.name || "Unknown Organization"
+        };
+      }
+    })
+  ],
+  callbacks: {
+    jwt({ token, user }) {
+      if (user) {
+        token.name = user.name;
+        token.email = user.email;
+        token.organizationId = user.organizationId;
+        token.role = user.role;
+        token.profilePic = user.profilePic as string;
+        token.organizationName = user.organizationName;
+      }
+      return token;
     },
-    pages: {
-        signIn: '/signin',
-        signOut: '/signout',
-    },
-    secret: process.env.NEXTAUTH_SECRET,
+    session({ session, token }) {
+      session.user.name = token.name as string;
+      session.user.email = token.email as string;
+      session.user.organizationId = token.organizationId as string;
+      session.user.role = token.role as string;
+      session.user.profilePic = token.profilePic as string;
+      session.user.organizationName = token.organizationName as string;
+      return session;
+    }
+  },
+  pages: {
+    signIn: '/signin',
+    signOut: '/signout',
+  },
+  secret: process.env.NEXTAUTH_SECRET,
 };
