@@ -17,6 +17,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Insight-Out - AI-Powered Feedback Categorization",
   description: "Transform unstructured customer feedback into actionable insights with AI-powered categorization and sentiment analysis.",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 const isProduction = process.env.NODE_ENV === "production";
