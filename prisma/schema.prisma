@@ -12,11 +12,13 @@ model User{
   name   String?
   email  String  @unique
   password  String
-  role  String  @default("Admin")
+  role  Role  @default(Member)
   organizationId  String
   profilePic String? @default("https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Default_pfp.svg/250px-Default_pfp.svg.png")
   organization  Organization  @relation(fields : [organizationId], references : [id])
   createdAt DateTime  @default(now())
+  sessionVersion Int @default(1)
+  sentInvites OrganizationInvite[] @relation("InvitedByUser")
 }
 
 model Organization{
@@ -29,6 +31,26 @@ model Organization{
   feedbacks   Feedback[]
   csvUploads  CsvUpload[]
   keywords Keyword[]
+  invites OrganizationInvite[]
+}
+
+model OrganizationInvite {
+  id              String       @id @default(uuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email           String
+  role            Role
+  tokenHash       String       @unique
+  invitedByUserId String
+  invitedBy       User         @relation("InvitedByUser", fields: [invitedByUserId], references: [id], onDelete: Cascade)
+  expiresAt       DateTime
+  acceptedAt      DateTime?
+  revokedAt       DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([organizationId])
+  @@index([email])
 }
 
 model Feedback {
@@ -70,6 +92,12 @@ enum Plan{
   Free
   Pro
   Premium
+}
+
+enum Role{
+  Admin
+  Manager
+  Member
 }
 
 enum Status{

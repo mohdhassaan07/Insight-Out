@@ -18,6 +18,15 @@ export const Plan = {
 export type Plan = (typeof Plan)[keyof typeof Plan]
 
 
+export const Role = {
+  Admin: 'Admin',
+  Manager: 'Manager',
+  Member: 'Member'
+} as const
+
+export type Role = (typeof Role)[keyof typeof Role]
+
+
 export const Status = {
   auto_approved: 'auto_approved',
   self_approved: 'self_approved'

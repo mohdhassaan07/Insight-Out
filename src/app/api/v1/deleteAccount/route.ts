@@ -25,28 +25,18 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: verification.message }, { status: 400 });
         }
 
-        // Fetch user to get their organizationId
         const user = await prisma.user.findUnique({
             where: { email },
-            select: { organizationId: true }
+            select: { id: true, organizationId: true, role: true }
         });
 
         if (!user) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        // Check if user is admin
-        const isAdmin = await prisma.user.findUnique({
-            where: {
-                email,
-                organizationId: user.organizationId,
-            },
-            select: { role: true }
-        });
-
-        if (isAdmin?.role == "Admin") {
-            // If they are the only member, delete everything associated with the organization
+        if (user.role === "Admin") {
             await prisma.$transaction([
+                prisma.organizationInvite.deleteMany({ where: { organizationId: user.organizationId } }),
                 prisma.feedback.deleteMany({ where: { organizationId: user.organizationId } }),
                 prisma.csvUpload.deleteMany({ where: { organizationId: user.organizationId } }),
                 prisma.keyword.deleteMany({ where: { organizationId: user.organizationId } }),
@@ -54,9 +44,8 @@ export async function POST(req: Request) {
                 prisma.organization.delete({ where: { id: user.organizationId } })
             ]);
         } else {
-            // Otherwise, just delete the user
             await prisma.user.delete({
-                where: { email }
+                where: { id: user.id }
             });
         }
 

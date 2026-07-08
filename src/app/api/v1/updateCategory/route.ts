@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
-import { authOptions } from "@/src/lib/auth";
-import { getServerSession } from "next-auth";
 import prisma from "@/src/lib/prisma";
+import { requireRole } from "@/src/lib/roles";
 
 export async function PUT(req: Request) {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const auth = await requireRole(["Admin", "Manager"]);
+    if (!auth.ok) return auth.response;
+    const session = auth.session;
     try {
         const { feedbackId, category, sentiment, source } = await req.json();
         if (!feedbackId) {

@@ -53,6 +53,7 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   User: 'User',
   Organization: 'Organization',
+  OrganizationInvite: 'OrganizationInvite',
   Feedback: 'Feedback',
   CsvUpload: 'CsvUpload',
   Keyword: 'Keyword'
@@ -82,7 +83,8 @@ export const UserScalarFieldEnum = {
   role: 'role',
   organizationId: 'organizationId',
   profilePic: 'profilePic',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  sessionVersion: 'sessionVersion'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -97,6 +99,23 @@ export const OrganizationScalarFieldEnum = {
 } as const
 
 export type OrganizationScalarFieldEnum = (typeof OrganizationScalarFieldEnum)[keyof typeof OrganizationScalarFieldEnum]
+
+
+export const OrganizationInviteScalarFieldEnum = {
+  id: 'id',
+  organizationId: 'organizationId',
+  email: 'email',
+  role: 'role',
+  tokenHash: 'tokenHash',
+  invitedByUserId: 'invitedByUserId',
+  expiresAt: 'expiresAt',
+  acceptedAt: 'acceptedAt',
+  revokedAt: 'revokedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type OrganizationInviteScalarFieldEnum = (typeof OrganizationInviteScalarFieldEnum)[keyof typeof OrganizationInviteScalarFieldEnum]
 
 
 export const FeedbackScalarFieldEnum = {

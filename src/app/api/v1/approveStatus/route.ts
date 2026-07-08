@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
-import { authOptions } from "@/src/lib/auth"
-import { getServerSession } from "next-auth";
 import prisma from "@/src/lib/prisma";
+import { requireRole } from "@/src/lib/roles";
 
 export async function PUT(req: Request) {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const auth = await requireRole(["Admin", "Manager"]);
+    if (!auth.ok) return auth.response;
+    const session = auth.session;
     try {
         const { feedbackId } = await req.json();
         const feedback = await prisma.feedback.update({
@@ -19,7 +17,7 @@ export async function PUT(req: Request) {
                 status: "auto_approved"
             }
         })
-        return NextResponse.json({ message: "Feedback approved successfully",feedback }, { status: 200 });
+        return NextResponse.json({ message: "Feedback approved successfully", feedback }, { status: 200 });
     } catch (error) {
         return NextResponse.json({ error: "Failed to approve feedback" }, { status: 500 });
     }

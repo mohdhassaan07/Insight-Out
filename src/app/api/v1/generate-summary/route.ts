@@ -1,9 +1,8 @@
-import { authOptions } from "@/src/lib/auth";
 import prisma from "@/src/lib/prisma";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import Groq from "groq-sdk";
+import { requireRole } from "@/src/lib/roles";
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 
@@ -64,15 +63,14 @@ async function generateSummarywithGroq(feedbacks: string[]) {
 }
 
 export async function GET(req: Request) {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+    const auth = await requireRole(["Admin", "Manager"]);
+    if (!auth.ok) return auth.response;
+    const session = auth.session;
     try {
-        let month = new Date().getMonth()+1;
+        const month = new Date().getMonth()+1;
         const feedbacks = await prisma.feedback.findMany({
             where:{
-                organizationId: session?.user?.organizationId!,
+                organizationId: session.user.organizationId,
                 createdAt: {
                     gte: new Date(new Date().getFullYear(), month-1, 1),
                     lt: new Date(new Date().getFullYear(), month, 1)

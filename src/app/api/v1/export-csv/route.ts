@@ -1,21 +1,15 @@
-import { authOptions } from "@/src/lib/auth";
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { Parser } from "json2csv";
 import prisma from "@/src/lib/prisma";
 import { exportLimiter } from "@/src/lib/rateLimiter";
+import { requireRole } from "@/src/lib/roles";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
     try {
-        const session = await getServerSession(authOptions);
-
-        if (!session?.user?.organizationId) {
-            return NextResponse.json(
-                { error: "Unauthorized" },
-                { status: 401 }
-            );
-        }
+        const auth = await requireRole(["Admin", "Manager"]);
+        if (!auth.ok) return auth.response;
+        const session = auth.session;
 
         const ip = req.headers.get("x-forwarded-for") ?? "anonymous";
         const { success } = await exportLimiter.limit(ip);

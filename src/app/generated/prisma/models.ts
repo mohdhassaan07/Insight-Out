@@ -10,6 +10,7 @@
  */
 export type * from './models/User'
 export type * from './models/Organization'
+export type * from './models/OrganizationInvite'
 export type * from './models/Feedback'
 export type * from './models/CsvUpload'
 export type * from './models/Keyword'

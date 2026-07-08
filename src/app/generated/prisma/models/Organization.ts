@@ -220,6 +220,7 @@ export type OrganizationWhereInput = {
   feedbacks?: Prisma.FeedbackListRelationFilter
   csvUploads?: Prisma.CsvUploadListRelationFilter
   keywords?: Prisma.KeywordListRelationFilter
+  invites?: Prisma.OrganizationInviteListRelationFilter
 }
 
 export type OrganizationOrderByWithRelationInput = {
@@ -232,6 +233,7 @@ export type OrganizationOrderByWithRelationInput = {
   feedbacks?: Prisma.FeedbackOrderByRelationAggregateInput
   csvUploads?: Prisma.CsvUploadOrderByRelationAggregateInput
   keywords?: Prisma.KeywordOrderByRelationAggregateInput
+  invites?: Prisma.OrganizationInviteOrderByRelationAggregateInput
 }
 
 export type OrganizationWhereUniqueInput = Prisma.AtLeast<{
@@ -247,6 +249,7 @@ export type OrganizationWhereUniqueInput = Prisma.AtLeast<{
   feedbacks?: Prisma.FeedbackListRelationFilter
   csvUploads?: Prisma.CsvUploadListRelationFilter
   keywords?: Prisma.KeywordListRelationFilter
+  invites?: Prisma.OrganizationInviteListRelationFilter
 }, "id">
 
 export type OrganizationOrderByWithAggregationInput = {
@@ -283,6 +286,7 @@ export type OrganizationCreateInput = {
   feedbacks?: Prisma.FeedbackCreateNestedManyWithoutOrganizationInput
   csvUploads?: Prisma.CsvUploadCreateNestedManyWithoutOrganizationInput
   keywords?: Prisma.KeywordCreateNestedManyWithoutOrganizationInput
+  invites?: Prisma.OrganizationInviteCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUncheckedCreateInput = {
@@ -295,6 +299,7 @@ export type OrganizationUncheckedCreateInput = {
   feedbacks?: Prisma.FeedbackUncheckedCreateNestedManyWithoutOrganizationInput
   csvUploads?: Prisma.CsvUploadUncheckedCreateNestedManyWithoutOrganizationInput
   keywords?: Prisma.KeywordUncheckedCreateNestedManyWithoutOrganizationInput
+  invites?: Prisma.OrganizationInviteUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUpdateInput = {
@@ -307,6 +312,7 @@ export type OrganizationUpdateInput = {
   feedbacks?: Prisma.FeedbackUpdateManyWithoutOrganizationNestedInput
   csvUploads?: Prisma.CsvUploadUpdateManyWithoutOrganizationNestedInput
   keywords?: Prisma.KeywordUpdateManyWithoutOrganizationNestedInput
+  invites?: Prisma.OrganizationInviteUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationUncheckedUpdateInput = {
@@ -319,6 +325,7 @@ export type OrganizationUncheckedUpdateInput = {
   feedbacks?: Prisma.FeedbackUncheckedUpdateManyWithoutOrganizationNestedInput
   csvUploads?: Prisma.CsvUploadUncheckedUpdateManyWithoutOrganizationNestedInput
   keywords?: Prisma.KeywordUncheckedUpdateManyWithoutOrganizationNestedInput
+  invites?: Prisma.OrganizationInviteUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationCreateManyInput = {
@@ -400,12 +407,18 @@ export type EnumPlanFieldUpdateOperationsInput = {
   set?: $Enums.Plan
 }
 
-export type IntFieldUpdateOperationsInput = {
-  set?: number
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
+export type OrganizationCreateNestedOneWithoutInvitesInput = {
+  create?: Prisma.XOR<Prisma.OrganizationCreateWithoutInvitesInput, Prisma.OrganizationUncheckedCreateWithoutInvitesInput>
+  connectOrCreate?: Prisma.OrganizationCreateOrConnectWithoutInvitesInput
+  connect?: Prisma.OrganizationWhereUniqueInput
+}
+
+export type OrganizationUpdateOneRequiredWithoutInvitesNestedInput = {
+  create?: Prisma.XOR<Prisma.OrganizationCreateWithoutInvitesInput, Prisma.OrganizationUncheckedCreateWithoutInvitesInput>
+  connectOrCreate?: Prisma.OrganizationCreateOrConnectWithoutInvitesInput
+  upsert?: Prisma.OrganizationUpsertWithoutInvitesInput
+  connect?: Prisma.OrganizationWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.OrganizationUpdateToOneWithWhereWithoutInvitesInput, Prisma.OrganizationUpdateWithoutInvitesInput>, Prisma.OrganizationUncheckedUpdateWithoutInvitesInput>
 }
 
 export type OrganizationCreateNestedOneWithoutFeedbacksInput = {
@@ -459,6 +472,7 @@ export type OrganizationCreateWithoutUsersInput = {
   feedbacks?: Prisma.FeedbackCreateNestedManyWithoutOrganizationInput
   csvUploads?: Prisma.CsvUploadCreateNestedManyWithoutOrganizationInput
   keywords?: Prisma.KeywordCreateNestedManyWithoutOrganizationInput
+  invites?: Prisma.OrganizationInviteCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUncheckedCreateWithoutUsersInput = {
@@ -470,6 +484,7 @@ export type OrganizationUncheckedCreateWithoutUsersInput = {
   feedbacks?: Prisma.FeedbackUncheckedCreateNestedManyWithoutOrganizationInput
   csvUploads?: Prisma.CsvUploadUncheckedCreateNestedManyWithoutOrganizationInput
   keywords?: Prisma.KeywordUncheckedCreateNestedManyWithoutOrganizationInput
+  invites?: Prisma.OrganizationInviteUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationCreateOrConnectWithoutUsersInput = {
@@ -497,6 +512,7 @@ export type OrganizationUpdateWithoutUsersInput = {
   feedbacks?: Prisma.FeedbackUpdateManyWithoutOrganizationNestedInput
   csvUploads?: Prisma.CsvUploadUpdateManyWithoutOrganizationNestedInput
   keywords?: Prisma.KeywordUpdateManyWithoutOrganizationNestedInput
+  invites?: Prisma.OrganizationInviteUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationUncheckedUpdateWithoutUsersInput = {
@@ -505,6 +521,71 @@ export type OrganizationUncheckedUpdateWithoutUsersInput = {
   plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   totalCSVUploads?: Prisma.IntFieldUpdateOperationsInput | number
+  feedbacks?: Prisma.FeedbackUncheckedUpdateManyWithoutOrganizationNestedInput
+  csvUploads?: Prisma.CsvUploadUncheckedUpdateManyWithoutOrganizationNestedInput
+  keywords?: Prisma.KeywordUncheckedUpdateManyWithoutOrganizationNestedInput
+  invites?: Prisma.OrganizationInviteUncheckedUpdateManyWithoutOrganizationNestedInput
+}
+
+export type OrganizationCreateWithoutInvitesInput = {
+  id?: string
+  name?: string | null
+  plan?: $Enums.Plan
+  createdAt?: Date | string
+  totalCSVUploads?: number
+  users?: Prisma.UserCreateNestedManyWithoutOrganizationInput
+  feedbacks?: Prisma.FeedbackCreateNestedManyWithoutOrganizationInput
+  csvUploads?: Prisma.CsvUploadCreateNestedManyWithoutOrganizationInput
+  keywords?: Prisma.KeywordCreateNestedManyWithoutOrganizationInput
+}
+
+export type OrganizationUncheckedCreateWithoutInvitesInput = {
+  id?: string
+  name?: string | null
+  plan?: $Enums.Plan
+  createdAt?: Date | string
+  totalCSVUploads?: number
+  users?: Prisma.UserUncheckedCreateNestedManyWithoutOrganizationInput
+  feedbacks?: Prisma.FeedbackUncheckedCreateNestedManyWithoutOrganizationInput
+  csvUploads?: Prisma.CsvUploadUncheckedCreateNestedManyWithoutOrganizationInput
+  keywords?: Prisma.KeywordUncheckedCreateNestedManyWithoutOrganizationInput
+}
+
+export type OrganizationCreateOrConnectWithoutInvitesInput = {
+  where: Prisma.OrganizationWhereUniqueInput
+  create: Prisma.XOR<Prisma.OrganizationCreateWithoutInvitesInput, Prisma.OrganizationUncheckedCreateWithoutInvitesInput>
+}
+
+export type OrganizationUpsertWithoutInvitesInput = {
+  update: Prisma.XOR<Prisma.OrganizationUpdateWithoutInvitesInput, Prisma.OrganizationUncheckedUpdateWithoutInvitesInput>
+  create: Prisma.XOR<Prisma.OrganizationCreateWithoutInvitesInput, Prisma.OrganizationUncheckedCreateWithoutInvitesInput>
+  where?: Prisma.OrganizationWhereInput
+}
+
+export type OrganizationUpdateToOneWithWhereWithoutInvitesInput = {
+  where?: Prisma.OrganizationWhereInput
+  data: Prisma.XOR<Prisma.OrganizationUpdateWithoutInvitesInput, Prisma.OrganizationUncheckedUpdateWithoutInvitesInput>
+}
+
+export type OrganizationUpdateWithoutInvitesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  totalCSVUploads?: Prisma.IntFieldUpdateOperationsInput | number
+  users?: Prisma.UserUpdateManyWithoutOrganizationNestedInput
+  feedbacks?: Prisma.FeedbackUpdateManyWithoutOrganizationNestedInput
+  csvUploads?: Prisma.CsvUploadUpdateManyWithoutOrganizationNestedInput
+  keywords?: Prisma.KeywordUpdateManyWithoutOrganizationNestedInput
+}
+
+export type OrganizationUncheckedUpdateWithoutInvitesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  plan?: Prisma.EnumPlanFieldUpdateOperationsInput | $Enums.Plan
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  totalCSVUploads?: Prisma.IntFieldUpdateOperationsInput | number
+  users?: Prisma.UserUncheckedUpdateManyWithoutOrganizationNestedInput
   feedbacks?: Prisma.FeedbackUncheckedUpdateManyWithoutOrganizationNestedInput
   csvUploads?: Prisma.CsvUploadUncheckedUpdateManyWithoutOrganizationNestedInput
   keywords?: Prisma.KeywordUncheckedUpdateManyWithoutOrganizationNestedInput
@@ -519,6 +600,7 @@ export type OrganizationCreateWithoutFeedbacksInput = {
   users?: Prisma.UserCreateNestedManyWithoutOrganizationInput
   csvUploads?: Prisma.CsvUploadCreateNestedManyWithoutOrganizationInput
   keywords?: Prisma.KeywordCreateNestedManyWithoutOrganizationInput
+  invites?: Prisma.OrganizationInviteCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUncheckedCreateWithoutFeedbacksInput = {
@@ -530,6 +612,7 @@ export type OrganizationUncheckedCreateWithoutFeedbacksInput = {
   users?: Prisma.UserUncheckedCreateNestedManyWithoutOrganizationInput
   csvUploads?: Prisma.CsvUploadUncheckedCreateNestedManyWithoutOrganizationInput
   keywords?: Prisma.KeywordUncheckedCreateNestedManyWithoutOrganizationInput
+  invites?: Prisma.OrganizationInviteUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationCreateOrConnectWithoutFeedbacksInput = {
@@ -557,6 +640,7 @@ export type OrganizationUpdateWithoutFeedbacksInput = {
   users?: Prisma.UserUpdateManyWithoutOrganizationNestedInput
   csvUploads?: Prisma.CsvUploadUpdateManyWithoutOrganizationNestedInput
   keywords?: Prisma.KeywordUpdateManyWithoutOrganizationNestedInput
+  invites?: Prisma.OrganizationInviteUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationUncheckedUpdateWithoutFeedbacksInput = {
@@ -568,6 +652,7 @@ export type OrganizationUncheckedUpdateWithoutFeedbacksInput = {
   users?: Prisma.UserUncheckedUpdateManyWithoutOrganizationNestedInput
   csvUploads?: Prisma.CsvUploadUncheckedUpdateManyWithoutOrganizationNestedInput
   keywords?: Prisma.KeywordUncheckedUpdateManyWithoutOrganizationNestedInput
+  invites?: Prisma.OrganizationInviteUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationCreateWithoutCsvUploadsInput = {
@@ -579,6 +664,7 @@ export type OrganizationCreateWithoutCsvUploadsInput = {
   users?: Prisma.UserCreateNestedManyWithoutOrganizationInput
   feedbacks?: Prisma.FeedbackCreateNestedManyWithoutOrganizationInput
   keywords?: Prisma.KeywordCreateNestedManyWithoutOrganizationInput
+  invites?: Prisma.OrganizationInviteCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUncheckedCreateWithoutCsvUploadsInput = {
@@ -590,6 +676,7 @@ export type OrganizationUncheckedCreateWithoutCsvUploadsInput = {
   users?: Prisma.UserUncheckedCreateNestedManyWithoutOrganizationInput
   feedbacks?: Prisma.FeedbackUncheckedCreateNestedManyWithoutOrganizationInput
   keywords?: Prisma.KeywordUncheckedCreateNestedManyWithoutOrganizationInput
+  invites?: Prisma.OrganizationInviteUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationCreateOrConnectWithoutCsvUploadsInput = {
@@ -617,6 +704,7 @@ export type OrganizationUpdateWithoutCsvUploadsInput = {
   users?: Prisma.UserUpdateManyWithoutOrganizationNestedInput
   feedbacks?: Prisma.FeedbackUpdateManyWithoutOrganizationNestedInput
   keywords?: Prisma.KeywordUpdateManyWithoutOrganizationNestedInput
+  invites?: Prisma.OrganizationInviteUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationUncheckedUpdateWithoutCsvUploadsInput = {
@@ -628,6 +716,7 @@ export type OrganizationUncheckedUpdateWithoutCsvUploadsInput = {
   users?: Prisma.UserUncheckedUpdateManyWithoutOrganizationNestedInput
   feedbacks?: Prisma.FeedbackUncheckedUpdateManyWithoutOrganizationNestedInput
   keywords?: Prisma.KeywordUncheckedUpdateManyWithoutOrganizationNestedInput
+  invites?: Prisma.OrganizationInviteUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationCreateWithoutKeywordsInput = {
@@ -639,6 +728,7 @@ export type OrganizationCreateWithoutKeywordsInput = {
   users?: Prisma.UserCreateNestedManyWithoutOrganizationInput
   feedbacks?: Prisma.FeedbackCreateNestedManyWithoutOrganizationInput
   csvUploads?: Prisma.CsvUploadCreateNestedManyWithoutOrganizationInput
+  invites?: Prisma.OrganizationInviteCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationUncheckedCreateWithoutKeywordsInput = {
@@ -650,6 +740,7 @@ export type OrganizationUncheckedCreateWithoutKeywordsInput = {
   users?: Prisma.UserUncheckedCreateNestedManyWithoutOrganizationInput
   feedbacks?: Prisma.FeedbackUncheckedCreateNestedManyWithoutOrganizationInput
   csvUploads?: Prisma.CsvUploadUncheckedCreateNestedManyWithoutOrganizationInput
+  invites?: Prisma.OrganizationInviteUncheckedCreateNestedManyWithoutOrganizationInput
 }
 
 export type OrganizationCreateOrConnectWithoutKeywordsInput = {
@@ -677,6 +768,7 @@ export type OrganizationUpdateWithoutKeywordsInput = {
   users?: Prisma.UserUpdateManyWithoutOrganizationNestedInput
   feedbacks?: Prisma.FeedbackUpdateManyWithoutOrganizationNestedInput
   csvUploads?: Prisma.CsvUploadUpdateManyWithoutOrganizationNestedInput
+  invites?: Prisma.OrganizationInviteUpdateManyWithoutOrganizationNestedInput
 }
 
 export type OrganizationUncheckedUpdateWithoutKeywordsInput = {
@@ -688,6 +780,7 @@ export type OrganizationUncheckedUpdateWithoutKeywordsInput = {
   users?: Prisma.UserUncheckedUpdateManyWithoutOrganizationNestedInput
   feedbacks?: Prisma.FeedbackUncheckedUpdateManyWithoutOrganizationNestedInput
   csvUploads?: Prisma.CsvUploadUncheckedUpdateManyWithoutOrganizationNestedInput
+  invites?: Prisma.OrganizationInviteUncheckedUpdateManyWithoutOrganizationNestedInput
 }
 
 
@@ -700,6 +793,7 @@ export type OrganizationCountOutputType = {
   feedbacks: number
   csvUploads: number
   keywords: number
+  invites: number
 }
 
 export type OrganizationCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -707,6 +801,7 @@ export type OrganizationCountOutputTypeSelect<ExtArgs extends runtime.Types.Exte
   feedbacks?: boolean | OrganizationCountOutputTypeCountFeedbacksArgs
   csvUploads?: boolean | OrganizationCountOutputTypeCountCsvUploadsArgs
   keywords?: boolean | OrganizationCountOutputTypeCountKeywordsArgs
+  invites?: boolean | OrganizationCountOutputTypeCountInvitesArgs
 }
 
 /**
@@ -747,6 +842,13 @@ export type OrganizationCountOutputTypeCountKeywordsArgs<ExtArgs extends runtime
   where?: Prisma.KeywordWhereInput
 }
 
+/**
+ * OrganizationCountOutputType without action
+ */
+export type OrganizationCountOutputTypeCountInvitesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.OrganizationInviteWhereInput
+}
+
 
 export type OrganizationSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -758,6 +860,7 @@ export type OrganizationSelect<ExtArgs extends runtime.Types.Extensions.Internal
   feedbacks?: boolean | Prisma.Organization$feedbacksArgs<ExtArgs>
   csvUploads?: boolean | Prisma.Organization$csvUploadsArgs<ExtArgs>
   keywords?: boolean | Prisma.Organization$keywordsArgs<ExtArgs>
+  invites?: boolean | Prisma.Organization$invitesArgs<ExtArgs>
   _count?: boolean | Prisma.OrganizationCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["organization"]>
 
@@ -791,6 +894,7 @@ export type OrganizationInclude<ExtArgs extends runtime.Types.Extensions.Interna
   feedbacks?: boolean | Prisma.Organization$feedbacksArgs<ExtArgs>
   csvUploads?: boolean | Prisma.Organization$csvUploadsArgs<ExtArgs>
   keywords?: boolean | Prisma.Organization$keywordsArgs<ExtArgs>
+  invites?: boolean | Prisma.Organization$invitesArgs<ExtArgs>
   _count?: boolean | Prisma.OrganizationCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type OrganizationIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -803,6 +907,7 @@ export type $OrganizationPayload<ExtArgs extends runtime.Types.Extensions.Intern
     feedbacks: Prisma.$FeedbackPayload<ExtArgs>[]
     csvUploads: Prisma.$CsvUploadPayload<ExtArgs>[]
     keywords: Prisma.$KeywordPayload<ExtArgs>[]
+    invites: Prisma.$OrganizationInvitePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1208,6 +1313,7 @@ export interface Prisma__OrganizationClient<T, Null = never, ExtArgs extends run
   feedbacks<T extends Prisma.Organization$feedbacksArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Organization$feedbacksArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$FeedbackPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   csvUploads<T extends Prisma.Organization$csvUploadsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Organization$csvUploadsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CsvUploadPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   keywords<T extends Prisma.Organization$keywordsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Organization$keywordsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$KeywordPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  invites<T extends Prisma.Organization$invitesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Organization$invitesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$OrganizationInvitePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1723,6 +1829,30 @@ export type Organization$keywordsArgs<ExtArgs extends runtime.Types.Extensions.I
   take?: number
   skip?: number
   distinct?: Prisma.KeywordScalarFieldEnum | Prisma.KeywordScalarFieldEnum[]
+}
+
+/**
+ * Organization.invites
+ */
+export type Organization$invitesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the OrganizationInvite
+   */
+  select?: Prisma.OrganizationInviteSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the OrganizationInvite
+   */
+  omit?: Prisma.OrganizationInviteOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.OrganizationInviteInclude<ExtArgs> | null
+  where?: Prisma.OrganizationInviteWhereInput
+  orderBy?: Prisma.OrganizationInviteOrderByWithRelationInput | Prisma.OrganizationInviteOrderByWithRelationInput[]
+  cursor?: Prisma.OrganizationInviteWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.OrganizationInviteScalarFieldEnum | Prisma.OrganizationInviteScalarFieldEnum[]
 }
 
 /**

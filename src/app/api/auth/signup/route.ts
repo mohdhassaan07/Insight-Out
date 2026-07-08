@@ -25,20 +25,24 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "User already exists" }, { status: 400 });
         }
 
-        const organization = await prisma.organization.create({
-            data: {
-                name: parsedBody.data.orgName,
-            }
-        });
         const hashedPassword = await bcrypt.hash(parsedBody.data.password, 10);
-        const newuser = await prisma.user.create({
-            data: {
-                name: parsedBody.data.name,
-                email: parsedBody.data.email,
-                password: hashedPassword,
-                organizationId: organization.id
-            }
-        })
+        const newuser = await prisma.$transaction(async (tx) => {
+            const organization = await tx.organization.create({
+                data: {
+                    name: parsedBody.data.orgName,
+                }
+            });
+
+            return tx.user.create({
+                data: {
+                    name: parsedBody.data.name,
+                    email: parsedBody.data.email,
+                    password: hashedPassword,
+                    role: "Admin",
+                    organizationId: organization.id
+                }
+            });
+        });
         return NextResponse.json({ message: "User created successfully", user: newuser }, { status: 201 });
     } catch (error) {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

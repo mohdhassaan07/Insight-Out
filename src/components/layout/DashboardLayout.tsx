@@ -1,15 +1,18 @@
 "use client";
 import { useState, useEffect } from "react";
-import { SessionProvider } from "next-auth/react";
 import Sidebar from "./Sidebar";
+import SessionGuard from "@/src/components/providers/SessionGuard";
+import { usePathname } from "next/navigation";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const pathname = usePathname();
 
-  // Close sidebar on route change (detected via children change) on mobile
+  // Close sidebar on route change on mobile.
   useEffect(() => {
-    setSidebarOpen(false);
-  }, [children]);
+    const timeoutId = window.setTimeout(() => setSidebarOpen(false), 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [pathname]);
 
   // Close sidebar when resizing to desktop
   useEffect(() => {
@@ -23,8 +26,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, []);
 
   return (
-    <SessionProvider>
-      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+      <SessionGuard />
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
         {/* Mobile Header Bar */}
@@ -47,6 +50,5 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {children}
         </main>
       </div>
-    </SessionProvider>
   );
 }

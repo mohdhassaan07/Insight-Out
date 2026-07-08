@@ -9,6 +9,7 @@ import { usefeedbackStore } from "@/src/store/feedbackStore";
 import { FeedbackSkeleton, LoadingCard } from "@/src/components/ui/Loading";
 import axios from "axios";
 import GenerateSummaryButton from "@/src/components/ui/GenerateSummaryButton";
+import { useSession } from "next-auth/react";
 
 interface Feedback {
   id: string;
@@ -66,6 +67,8 @@ function formatDate(dateString: string) {
 }
 
 export default function FeedbacksPage() {
+  const { data: session } = useSession();
+  const canManageFeedback = session?.user?.role === "Admin" || session?.user?.role === "Manager";
   const fetchfeedbacks = usefeedbackStore((s) => s.fetchFeedbacks);
   const updateApprovestatus = usefeedbackStore((s) => s.updateApprovestatus);
   const updateCategory = usefeedbackStore((s) => s.updateCategory);
@@ -184,16 +187,18 @@ export default function FeedbacksPage() {
               Browse and filter all your categorized feedback
             </p>
           </div>
-          <div className="mt-4 flex gap-3 md:mt-0">
-            <GenerateSummaryButton />
-            <Button variant="secondary" onClick={handleExport}>
+          {canManageFeedback && (
+            <div className="mt-4 flex gap-3 md:mt-0">
+              <GenerateSummaryButton />
+              <Button variant="secondary" onClick={handleExport}>
 
-              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              Export CSV
-            </Button>
-          </div>
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Export CSV
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Filters */}
@@ -266,7 +271,7 @@ export default function FeedbacksPage() {
                       <p className="text-zinc-600 dark:text-zinc-400">No feedback found matching your filters.</p>
                     </div>
                   ) : (
-                    filteredFeedbacks.map((feedback: any) => (
+                    filteredFeedbacks.map((feedback: Feedback) => (
                       <div
                         key={feedback.id}
                         onClick={() => setSelectedFeedback(feedback)}
@@ -474,7 +479,7 @@ export default function FeedbacksPage() {
                       </p>
                     </div>
 
-                    <div className="pt-4 flex gap-2 border-t border-zinc-200 dark:border-zinc-800">
+                    {canManageFeedback && <div className="pt-4 flex gap-2 border-t border-zinc-200 dark:border-zinc-800">
                       {selectedFeedback.status == "self_approved" && <Button isLoading={approveloading} onClick={approveFeedback} variant="secondary" className="w-full cursor-pointer">
                         Approve
                       </Button>}
@@ -484,7 +489,7 @@ export default function FeedbacksPage() {
                         </svg>
                         Edit
                       </Button>
-                    </div>
+                    </div>}
                   </CardContent>
                 </Card>
               )

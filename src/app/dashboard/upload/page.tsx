@@ -4,6 +4,7 @@ import DashboardLayout from "@/src/components/layout/DashboardLayout";
 import Card, { CardContent, CardHeader } from "@/src/components/ui/Card";
 import Button from "@/src/components/ui/Button";
 import axios from "axios";
+import { useSession } from "next-auth/react";
 
 
 function splitCsvLine(line: string): string[] {
@@ -76,6 +77,8 @@ function countValidFeedbackRows(csvText: string): number {
 }
 
 export default function UploadPage() {
+  const { data: session } = useSession();
+  const canUpload = session?.user?.role === "Admin" || session?.user?.role === "Manager";
   const [isDragging, setIsDragging] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -156,7 +159,7 @@ export default function UploadPage() {
   };
 
   const handleUpload = async () => {
-    if (!file) return;
+    if (!file || !canUpload) return;
 
     setIsUploading(true);
     setUploadProgress(0);
@@ -215,6 +218,16 @@ export default function UploadPage() {
           </p>
         </div>
 
+        {!canUpload && (
+          <Card className="mb-8 border-amber-200 dark:border-amber-900">
+            <CardContent>
+              <p className="text-sm text-amber-700 dark:text-amber-300">
+                Your role has view-only access. Ask an admin or manager to upload CSV feedback.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Upload Area */}
           <div className="lg:col-span-2">
@@ -230,7 +243,8 @@ export default function UploadPage() {
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => canUpload && fileInputRef.current?.click()}
+                  aria-disabled={!canUpload}
                   className={`
                     relative border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all duration-200
                     ${isDragging
@@ -245,6 +259,7 @@ export default function UploadPage() {
                     type="file"
                     accept=".csv"
                     onChange={handleFileSelect}
+                    disabled={!canUpload}
                     className="hidden"
                   />
 
@@ -331,7 +346,7 @@ export default function UploadPage() {
                 <div className="mt-6 flex gap-3">
                   <Button
                     onClick={handleUpload}
-                    disabled={!file || isUploading}
+                    disabled={!file || isUploading || !canUpload}
                     isLoading={isUploading}
                     className="flex-1"
                   >

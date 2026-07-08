@@ -22,6 +22,25 @@ type UpdateProfileResponse = {
   };
 };
 
+type Role = "Admin" | "Manager" | "Member";
+
+type TeamMember = {
+  id: string;
+  name: string | null;
+  email: string;
+  role: Role;
+  profilePic: string | null;
+  createdAt: string;
+};
+
+type TeamInvite = {
+  id: string;
+  email: string;
+  role: "Manager" | "Member";
+  expiresAt: string;
+  createdAt: string;
+};
+
 export default function SettingsPage() {
   const { showToast } = useToast();
   const { data: session } = useSession();
@@ -37,7 +56,7 @@ export default function SettingsPage() {
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [otp, setOtp] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
@@ -49,6 +68,16 @@ export default function SettingsPage() {
     newPassword: "",
     confirmPassword: ""
   });
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [teamInvites, setTeamInvites] = useState<TeamInvite[]>([]);
+  const [teamLoading, setTeamLoading] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<"Manager" | "Member">("Member");
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [memberActionId, setMemberActionId] = useState<string | null>(null);
+  const currentRole = session?.user?.role as Role | undefined;
+  const canManageTeam = currentRole === "Admin";
+  const canViewTeam = currentRole === "Admin" || currentRole === "Manager";
 
   useEffect(() => {
     console.log("Session data:", session);
@@ -108,8 +137,12 @@ export default function SettingsPage() {
       setSavingSection(section);
 
       const payload = new FormData();
-      payload.append("name", formData.name);
-      payload.append("organizationName", formData.organizationName);
+      if (section === "profile") {
+        payload.append("name", formData.name);
+      }
+      if (section === "organization") {
+        payload.append("organizationName", formData.organizationName);
+      }
       if (avatarFile) {
         payload.append("profilePic", avatarFile);
       }
@@ -166,6 +199,89 @@ export default function SettingsPage() {
       setIsUpdatingPassword(false);
     }
   }
+
+  const fetchTeam = async () => {
+    if (!canViewTeam) return;
+    try {
+      setTeamLoading(true);
+      const response = await axios.get<{ members: TeamMember[]; invites: TeamInvite[] }>("/api/v1/team/members");
+      setTeamMembers(response.data.members);
+      setTeamInvites(response.data.invites);
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string }>;
+      showToast(axiosError.response?.data?.error || "Failed to load team", "error");
+    } finally {
+      setTeamLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void fetchTeam();
+  }, [canViewTeam]);
+
+  const handleInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setInviteLoading(true);
+      await axios.post("/api/v1/team/invites", {
+        email: inviteEmail,
+        role: inviteRole,
+      });
+      setInviteEmail("");
+      setInviteRole("Member");
+      showToast("Invite sent successfully", "success");
+      await fetchTeam();
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string }>;
+      showToast(axiosError.response?.data?.error || "Failed to send invite", "error");
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
+  const updateMemberRole = async (memberId: string, role: "Manager" | "Member") => {
+    try {
+      setMemberActionId(memberId);
+      await axios.patch(`/api/v1/team/members/${memberId}/role`, { role });
+      showToast("Member role updated", "success");
+      await fetchTeam();
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string }>;
+      showToast(axiosError.response?.data?.error || "Failed to update member", "error");
+    } finally {
+      setMemberActionId(null);
+    }
+  };
+
+  const removeMember = async (memberId: string) => {
+    if (!window.confirm("Remove this member from the organization?")) return;
+    try {
+      setMemberActionId(memberId);
+      await axios.delete(`/api/v1/team/members/${memberId}`);
+      showToast("Member removed", "success");
+      await fetchTeam();
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string }>;
+      showToast(axiosError.response?.data?.error || "Failed to remove member", "error");
+    } finally {
+      setMemberActionId(null);
+    }
+  };
+
+  const transferAdmin = async (memberId: string) => {
+    if (!window.confirm("Transfer admin ownership to this member? You will become a Manager.")) return;
+    try {
+      setMemberActionId(memberId);
+      await axios.post("/api/v1/team/transfer-admin", { userId: memberId });
+      showToast("Admin ownership transferred. Please sign in again to refresh your session.", "success");
+      await signOut({ callbackUrl: "/signin" });
+    } catch (error) {
+      const axiosError = error as AxiosError<{ error?: string }>;
+      showToast(axiosError.response?.data?.error || "Failed to transfer admin", "error");
+    } finally {
+      setMemberActionId(null);
+    }
+  };
 
   const sendDeleteOtp = async () => {
     try {
@@ -290,7 +406,7 @@ export default function SettingsPage() {
               </h2>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Input label="Organization Name" placeholder="Acme Inc." name="organizationName" onChange={handlechange} value={formData.organizationName} />
+              <Input label="Organization Name" placeholder="Acme Inc." name="organizationName" onChange={handlechange} value={formData.organizationName} disabled={!canManageTeam} />
               <div>
                 <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
                   Current Plan
@@ -301,10 +417,205 @@ export default function SettingsPage() {
                 </div>
               </div>
               <div className="pt-2">
-                <Button onClick={() => handleSaveChanges("organization")} isLoading={savingSection === "organization"}>Save Changes</Button>
+                <Button onClick={() => handleSaveChanges("organization")} isLoading={savingSection === "organization"} disabled={!canManageTeam}>Save Changes</Button>
               </div>
             </CardContent>
           </Card>
+
+          {canViewTeam && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20">
+                      <svg className="h-4.5 w-4.5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                    </div>
+                    <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
+                      Team
+                    </h2>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">{teamMembers.length} members</span>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {canManageTeam && (
+                  <div className="relative overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/10 bg-linear-to-brrom-indigo-50/50 via-white to-purple-50/30 dark:from-indigo-500/5 dark:via-zinc-900 dark:to-purple-500/5">
+                    <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-indigo-500/20 to-transparent" />
+                    <form onSubmit={handleInvite} className="grid gap-4 p-5 md:grid-cols-[1fr_150px_auto]">
+                      <div>
+                        <label className="block text-[11px] font-mono tracking-[0.12em] uppercase text-zinc-500 dark:text-zinc-400 mb-2">
+                          Invite Email
+                        </label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-400 dark:text-zinc-500">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                          <input
+                            type="email"
+                            value={inviteEmail}
+                            onChange={(e) => setInviteEmail(e.target.value)}
+                            placeholder="teammate@example.com"
+                            required
+                            className="w-full pl-10 pr-4 py-2.5 text-sm bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/40 transition-all duration-300"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-mono tracking-[0.12em] uppercase text-zinc-500 dark:text-zinc-400 mb-2">
+                          Role
+                        </label>
+                        <select
+                          value={inviteRole}
+                          onChange={(e) => setInviteRole(e.target.value as "Manager" | "Member")}
+                          className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/40 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 transition-all duration-300 cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%239ca3af%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.23%207.21a.75.75%200%20011.06.02L10%2011.168l3.71-3.938a.75.75%200%20111.08%201.04l-4.25%204.5a.75.75%200%2001-1.08%200l-4.25-4.5a.75.75%200%2001.02-1.06z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-size-[1.25rem]g-[right_0.5rem_center] bg-no-repeat pr-8"
+                        >
+                          <option value="Member">Member</option>
+                          <option value="Manager">Manager</option>
+                        </select>
+                      </div>
+                      <div className="flex items-end">
+                        <Button type="submit" isLoading={inviteLoading} className="w-full py-2.5">
+                          <span className="flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Send Invite
+                          </span>
+                        </Button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                {/* Members list */}
+                <div className="space-y-2">
+                  {teamLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="flex items-center gap-3">
+                        <svg className="animate-spin h-5 w-5 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        <span className="text-sm text-zinc-500 dark:text-zinc-400">Loading team members...</span>
+                      </div>
+                    </div>
+                  ) : (
+                    teamMembers.map((member) => (
+                      <div
+                        key={member.id}
+                        className="group flex flex-col gap-3 rounded-xl border border-zinc-100 bg-white p-4 transition-all duration-300 hover:border-zinc-200 hover:shadow-sm dark:border-zinc-800/60 dark:bg-zinc-900/50 dark:hover:border-zinc-700 md:flex-row md:items-center md:justify-between"
+                      >
+                        <div className="flex min-w-0 items-center gap-3.5">
+                          <div className={`relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-semibold ring-2 transition-all duration-300 ${member.role === "Admin"
+                            ? "ring-purple-200 dark:ring-purple-500/30 bg-linear-to-br from-purple-100 to-purple-50 text-purple-700 dark:from-purple-500/20 dark:to-purple-500/10 dark:text-purple-300"
+                            : member.role === "Manager"
+                              ? "ring-blue-200 dark:ring-blue-500/30 bg-linear-to-br from-blue-100 to-blue-50 text-blue-700 dark:from-blue-500/20 dark:to-blue-500/10 dark:text-blue-300"
+                              : "ring-zinc-200 dark:ring-zinc-700 bg-linear-to-br from-zinc-100 to-zinc-50 text-zinc-700 dark:from-zinc-800 dark:to-zinc-800/50 dark:text-zinc-300"
+                            }`}>
+                            {member.profilePic ? (
+                              <img src={member.profilePic} alt="" className="h-full w-full object-cover" />
+                            ) : (
+                              <span className="text-base">{member.name?.charAt(0).toUpperCase() || member.email.charAt(0).toUpperCase()}</span>
+                            )}
+                            {member.role === "Admin" && (
+                              <div className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-purple-500 text-white ring-2 ring-white dark:ring-zinc-900">
+                                <svg className="h-2.5 w-2.5" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+                                </svg>
+                              </div>
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="truncate text-sm font-medium text-zinc-900 dark:text-white">{member.name || "Unnamed user"}</p>
+                              <Badge size="sm" variant={member.role === "Admin" ? "purple" : member.role === "Manager" ? "info" : "default"}>{member.role}</Badge>
+                            </div>
+                            <p className="mt-0.5 truncate text-xs text-zinc-500 dark:text-zinc-400">{member.email}</p>
+                          </div>
+                        </div>
+                        {canManageTeam && member.role !== "Admin" && (
+                          <div className="flex flex-wrap items-center gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
+                            <select
+                              value={member.role}
+                              disabled={memberActionId === member.id}
+                              onChange={(e) => updateMemberRole(member.id, e.target.value as "Manager" | "Member")}
+                              className="rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 cursor-pointer transition-all duration-300 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%239ca3af%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.23%207.21a.75.75%200%20011.06.02L10%2011.168l3.71-3.938a.75.75%200%20111.08%201.04l-4.25%204.5a.75.75%200%2001-1.08%200l-4.25-4.5a.75.75%200%2001.02-1.06z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-size-[1rem] bg-position-[right_0.35rem_center] bg-no-repeat pr-6"
+                            >
+                              <option value="Member">Member</option>
+                              <option value="Manager">Manager</option>
+                            </select>
+                            <button
+                              disabled={memberActionId === member.id}
+                              onClick={() => transferAdmin(member.id)}
+                              title="Transfer admin role"
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-700 transition-all duration-200 hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700 disabled:opacity-50 disabled:cursor-not-allowed dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-purple-500/30 dark:hover:bg-purple-500/10 dark:hover:text-purple-400"
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                              </svg>
+                              Make Admin
+                            </button>
+                            <button
+                              disabled={memberActionId === member.id}
+                              onClick={() => removeMember(member.id)}
+                              title="Remove member"
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-700 transition-all duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-50 disabled:cursor-not-allowed dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-red-500/30 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M22 10.5h-6m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+                              </svg>
+                              Remove
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Pending invites */}
+                {teamInvites.length > 0 && (
+                  <div className="space-y-3 border-t border-zinc-100 pt-5 dark:border-zinc-800">
+                    <div className="flex items-center gap-2">
+                      <svg className="h-4 w-4 text-amber-500 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">Pending Invites</h3>
+                      <span className="text-[10px] font-mono text-zinc-400 dark:text-zinc-500">({teamInvites.length})</span>
+                    </div>
+                    {teamInvites.map((invite) => (
+                      <div key={invite.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-zinc-200 bg-zinc-50/50 px-4 py-3.5 transition-colors duration-300 hover:bg-zinc-50 dark:border-zinc-700/50 dark:bg-zinc-800/30 dark:hover:bg-zinc-800/50">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20">
+                            <svg className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                            </svg>
+                          </div>
+                          <span className="text-sm font-medium text-zinc-700 dark:text-zinc-200">{invite.email}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Badge size="sm">{invite.role}</Badge>
+                          <div className="flex items-center gap-1.5">
+                            <svg className="h-3 w-3 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="text-[11px] text-zinc-400 dark:text-zinc-500">Expires {new Date(invite.expiresAt).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Password Settings */}
           <Card>

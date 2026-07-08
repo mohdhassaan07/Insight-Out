@@ -22,7 +22,7 @@ function getStringValue(value: FormDataEntryValue | null) {
 function getProfilePic(formData: FormData) {
     for (const fieldName of PROFILE_PIC_FIELD_NAMES) {
         const value = formData.get(fieldName);
-        if (value && typeof value === "object" && "size" in value && (value as any).size > 0) {
+        if (value instanceof File && value.size > 0) {
             return value as File;
         }
     }
@@ -134,6 +134,9 @@ export async function PUT(req: NextRequest) {
         const organizationData: { name?: string } = {};
 
         if (organizationName !== undefined && organizationName !== "") {
+            if (session.user.role !== "Admin") {
+                return NextResponse.json({ error: "Only admins can update organization settings" }, { status: 403 });
+            }
             if (organizationName.length < 1 || organizationName.length > 100) {
                 return NextResponse.json({ error: "Organization name must be between 1 and 100 characters" }, { status: 400 });
             }
