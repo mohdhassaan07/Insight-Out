@@ -406,5 +406,5 @@ This project is open source and available under the [MIT License](LICENSE).
 ---
 
 <p align="center">
-  Built with ❤️ by <a href="https://github.com/mohdhassaan07">Mohd Hassaan</a>
+  Designed and Developed by <a href="https://github.com/mohdhassaan07">Mohd Hassaan</a>
 </p>
