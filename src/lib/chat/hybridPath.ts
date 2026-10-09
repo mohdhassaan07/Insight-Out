@@ -37,7 +37,7 @@ export async function executeHybridPath(
 
   // Combine both results into a single LLM call for a coherent response
   const { text: answer } = await generateText({
-    model: groq("llama-3.3-70b-versatile"),
+    model: groq("openai/gpt-oss-120b"),
     system: HYBRID_RESPONSE_PROMPT,
     prompt: `User question: ${userMessage}
 

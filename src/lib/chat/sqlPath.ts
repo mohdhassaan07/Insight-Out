@@ -41,8 +41,9 @@ The database has a "Feedback" table with these columns:
 
 Rules:
 - Generate ONLY a single SELECT query.
-- Do NOT include a WHERE clause for organizationId — it will be injected automatically.
-- Use double quotes for camelCase column names: "createdAt", "organizationId".
+- Do NOT include a WHERE clause for organizationId; it will be injected automatically.
+- For counts, use COUNT(*). Never use COUNT("") or empty quoted identifiers.
+- Use double quotes only for camelCase column names: "createdAt", "organizationId".
 - Use single quotes for string/enum values.
 - Return ONLY the raw SQL query. No markdown, no explanation, no code fences.`;
 
@@ -54,6 +55,33 @@ const DANGEROUS_KEYWORDS =
 const MULTI_STATEMENT = /;\s*\S/;
 const SQL_COMMENT_LINE = /--/;
 const SQL_COMMENT_BLOCK = /\/\*/;
+const PARAMETER_PLACEHOLDER = /\$\d+/;
+
+function stripTrailingSemicolon(sql: string): string {
+  return sql.replace(/;?\s*$/, "");
+}
+
+/**
+ * Strip any LLM-hallucinated organizationId predicate so that we always
+ * inject it ourselves as a parameterized $1 value.
+ */
+function removeModelOrganizationFilter(sql: string): string {
+  const orgPredicate =
+    String.raw`\(?\s*"?organizationId"?\s*=\s*(?:'[^']*'|[^\s)]+)\s*\)?`;
+
+  return sql
+    .replace(new RegExp(String.raw`\s+WHERE\s+${orgPredicate}\s+AND\s+`, "i"), " WHERE ")
+    .replace(new RegExp(String.raw`\s+WHERE\s+${orgPredicate}\s+(GROUP\s+BY|ORDER\s+BY|HAVING|LIMIT)`, "i"), " $1")
+    .replace(new RegExp(String.raw`\s+WHERE\s+${orgPredicate}\s*$`, "i"), "")
+    .replace(new RegExp(String.raw`\s+AND\s+${orgPredicate}`, "i"), "")
+    .replace(new RegExp(String.raw`\s+OR\s+${orgPredicate}`, "i"), "");
+}
+
+function logGeneratedSQL(label: string, sql: string) {
+  if (process.env.NODE_ENV !== "production") {
+    console.log(`[chat-sql] ${label}:`, sql);
+  }
+}
 
 /**
  * Validate and sanitize LLM-generated SQL.
@@ -64,12 +92,10 @@ const SQL_COMMENT_BLOCK = /\/\*/;
  * 4. Organization-level filter injection (server-side, never from LLM)
  * 5. Row limit enforcement
  */
-function validateAndSanitizeSQL(
-  sql: string,
-  organizationId: string
-): string {
+function validateAndSanitizeSQL(sql: string): string {
   // Remove any markdown code fences the LLM might have included
   sql = sql.replace(/```sql\s*/gi, "").replace(/```\s*/g, "").trim();
+  sql = stripTrailingSemicolon(sql);
 
   // 1. Read-only check
   if (DANGEROUS_KEYWORDS.test(sql)) {
@@ -88,18 +114,30 @@ function validateAndSanitizeSQL(
   if (SQL_COMMENT_LINE.test(sql) || SQL_COMMENT_BLOCK.test(sql)) {
     throw new Error("SQL comments are not allowed");
   }
+  // Block prepared-statement placeholders the LLM might emit ($1, $2, …)
+  if (PARAMETER_PLACEHOLDER.test(sql)) {
+    throw new Error("SQL parameter placeholders are not allowed");
+  }
 
-  // 3. Table whitelist — only the Feedback table
-  if (!/\bFROM\s+"?Feedback"?\b/i.test(sql)) {
+  // Strip any organizationId filter the LLM may have hallucinated —
+  // we always inject it ourselves as a safe parameterized value.
+  sql = removeModelOrganizationFilter(sql);
+
+  // 3. Table whitelist — only the Feedback table (quoted or unquoted)
+  if (!(/\bFROM\s+"Feedback"/i.test(sql) || /\bFROM\s+[Ff]eedback\b/i.test(sql))) {
     throw new Error("Query must target the Feedback table");
   }
 
-  // 4. Inject organization filter (server-side, the LLM never provides this)
-  sql = injectOrganizationFilter(sql, organizationId);
+  // 3a. Normalize table name — PostgreSQL requires the exact double-quoted `"Feedback"`.
+  //     One pass handles both `"Feedback"` (already quoted) and bare `feedback`/`Feedback`.
+  sql = sql.replace(/\bFROM\s+(?:"Feedback"|[Ff]eedback\b)/g, `FROM "Feedback"`);
+
+  // 4. Inject organization filter via parameterized $1 (server-side, never from LLM)
+  sql = injectOrganizationFilter(sql);
 
   // 5. Enforce LIMIT if not present
   if (!/LIMIT\s+\d+/i.test(sql)) {
-    sql = sql.replace(/;?\s*$/, " LIMIT 100;");
+    sql = `${stripTrailingSemicolon(sql)} LIMIT 100`;
   }
 
   return sql;
@@ -109,26 +147,24 @@ function validateAndSanitizeSQL(
  * Inject the organizationId filter into the SQL query.
  * This is always done server-side — the LLM cannot control which org's data it accesses.
  */
-function injectOrganizationFilter(
-  sql: string,
-  organizationId: string
-): string {
-  const orgCondition = `"organizationId" = '${organizationId}'`;
+function injectOrganizationFilter(sql: string): string {
+  const orgCondition = `"organizationId" = $1`;
+  sql = stripTrailingSemicolon(sql);
 
   if (/\bWHERE\b/i.test(sql)) {
     // Insert org filter right after WHERE
-    return sql.replace(/\bWHERE\b/i, `WHERE ${orgCondition} AND`);
+    return sql.replace(/\bWHERE\b/i, () => `WHERE ${orgCondition} AND`);
   }
 
   // No WHERE clause — insert before GROUP BY, ORDER BY, LIMIT, HAVING, or end
   const insertionPoint =
     /\b(GROUP\s+BY|ORDER\s+BY|LIMIT|HAVING)\b/i;
   if (insertionPoint.test(sql)) {
-    return sql.replace(insertionPoint, `WHERE ${orgCondition} $1`);
+    return sql.replace(insertionPoint, (clause) => `WHERE ${orgCondition} ${clause}`);
   }
 
   // No clauses after FROM — append WHERE at the end
-  return sql.replace(/;?\s*$/, ` WHERE ${orgCondition};`);
+  return `${sql} WHERE ${orgCondition}`;
 }
 
 // ── Tool-based path (primary for simple queries) ───────────────────────
@@ -145,7 +181,7 @@ async function tryToolPath(
     const tools = createChatTools(organizationId);
 
     const result = await generateText({
-      model: groq("llama-3.3-70b-versatile"),
+      model: groq("openai/gpt-oss-120b"),
       system: `You are an AI assistant for a feedback analytics platform called Insight-Out.
 Answer the user's question using the available tools. 
 Use the tools to query the database, then provide a clear, data-driven answer.
@@ -183,22 +219,25 @@ async function rawSQLPath(
 ): Promise<ChatResponse> {
   // 1. LLM generates SQL
   const { text: rawSQL } = await generateText({
-    model: groq("llama-3.3-70b-versatile"),
+    model: groq("openai/gpt-oss-120b"),
     system: SQL_SYSTEM_PROMPT,
     prompt: userMessage,
     temperature: 0,
   });
 
   // 2. Validate and sanitize
-  const sanitizedSQL = validateAndSanitizeSQL(rawSQL, organizationId);
+  logGeneratedSQL("raw", rawSQL);
+  const sanitizedSQL = validateAndSanitizeSQL(rawSQL);
+  logGeneratedSQL("sanitized", sanitizedSQL);
 
   // 3. Execute the query
-  const results = await prisma.$queryRawUnsafe(sanitizedSQL);
+  const results = await prisma.$queryRawUnsafe(sanitizedSQL, organizationId);
 
   // 4. Format with LLM
+  // PostgreSQL COUNT(*) returns BigInt — convert to Number for JSON serialization.
   const answer = await formatResponse(
     userMessage,
-    JSON.stringify(results, null, 2)
+    JSON.stringify(results, (_, v) => (typeof v === "bigint" ? Number(v) : v), 2)
   );
 
   return { answer, queryType: "SQL" };

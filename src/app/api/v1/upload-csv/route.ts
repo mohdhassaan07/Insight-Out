@@ -7,6 +7,7 @@ import { v7 as uuidv7 } from "uuid";
 import { uploadLimiter } from "@/src/lib/rateLimiter";
 import Groq from "groq-sdk";
 import { requireRole } from "@/src/lib/roles";
+import { generateAndStoreEmbeddings } from "@/src/lib/embeddings";
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const MAX_FEEDBACKS_PER_UPLOAD = 100;
@@ -311,6 +312,11 @@ export async function POST(req: Request) {
                 timeout: 60000,
             }
         );
+        // Generate embeddings in background (non-blocking, fire-and-forget)
+        generateAndStoreEmbeddings(
+            finalResults.map(f => ({ id: f.id, text: f.feedback_text }))
+        ).catch(err => console.error("Embedding generation failed:", err));
+
         return NextResponse.json({ data: feedbackdata, keywordsExtracted: keywordCounts.size }, { status: 200 });
 
     } catch (error: any) {

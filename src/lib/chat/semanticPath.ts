@@ -59,7 +59,7 @@ export async function executeSemanticPath(
 
   // 4. Summarize with citations using the LLM
   const { text: answer } = await generateText({
-    model: groq("llama-3.3-70b-versatile"),
+    model: groq("openai/gpt-oss-120b"),
     system: SEMANTIC_RESPONSE_PROMPT,
     prompt: `User question: ${userMessage}\n\nRelevant feedback entries:\n${feedbackContext}`,
     temperature: 0.3,

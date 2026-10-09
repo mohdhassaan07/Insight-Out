@@ -333,6 +333,7 @@ body {
   from {
     transform: translateX(-100%);
   }
+
   to {
     transform: translateX(0);
   }
@@ -340,4 +341,159 @@ body {
 
 .animate-slide-in-sidebar {
   animation: slideInFromLeft 0.25s ease-out;
+}
+
+/* ═══════════════════════════════════════════════
+   CHATBOT ANIMATIONS
+═══════════════════════════════════════════════ */
+
+/* Panel slide-up + fade entrance */
+@keyframes chatbotPanelEnter {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.chatbot-panel-enter {
+  animation: chatbotPanelEnter 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* FAB pulse ring */
+@keyframes chatbotFabPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+  }
+
+  70% {
+    box-shadow: 0 0 0 12px rgba(99, 102, 241, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+  }
+}
+
+.chatbot-fab-pulse:not(.chatbot-fab-open) {
+  animation: chatbotFabPulse 2.5s ease-out infinite;
+}
+
+/* Typing dots bounce */
+@keyframes chatbotTypingDot {
+
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+.chatbot-typing-dot {
+  animation: chatbotTypingDot 1.2s ease-in-out infinite;
+}
+
+/* Message entrance */
+@keyframes chatbotMsgEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chatbot-msg-enter {
+  animation: chatbotMsgEnter 0.25s ease-out forwards;
+}
+
+/* Citation accordion reveal */
+@keyframes chatbotCitationsEnter {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+
+  to {
+    opacity: 1;
+    max-height: 500px;
+  }
+}
+
+.chatbot-citations-enter {
+  animation: chatbotCitationsEnter 0.3s ease-out forwards;
+  overflow: hidden;
+}
+
+/* Header gradient line shimmer */
+@keyframes chatbotGradientLine {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.chatbot-gradient-line {
+  background-size: 200% 200%;
+  animation: chatbotGradientLine 3s ease-in-out infinite;
+}
+
+/* Status dot pulse */
+@keyframes chatbotStatusPulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.chatbot-status-pulse {
+  animation: chatbotStatusPulse 2s ease-in-out infinite;
+}
+
+/* Custom scrollbar for chat messages */
+.chatbot-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.chatbot-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chatbot-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(113, 113, 122, 0.3);
+  border-radius: 999px;
+}
+
+.chatbot-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(113, 113, 122, 0.5);
+}
+
+.chatbot-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(113, 113, 122, 0.3) transparent;
 }
