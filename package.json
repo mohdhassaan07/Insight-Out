@@ -10,11 +10,14 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ai-sdk/google": "^4.0.92",
+    "@ai-sdk/groq": "^4.0.58",
     "@google/generative-ai": "^0.24.1",
     "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "^7.2.0",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.37.0",
+    "ai": "^7.0.133",
     "axios": "^1.13.2",
     "bcryptjs": "^3.0.3",
     "csv-parser": "^3.2.0",

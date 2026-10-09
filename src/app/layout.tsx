@@ -33,6 +33,7 @@ export default function RootLayout({
     <html lang="en" className={isProduction ? "prod" : ""} suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
       >
         <AuthProvider>
           <ToastProvider>
