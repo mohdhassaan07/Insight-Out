@@ -8,7 +8,7 @@ const SUGGESTED_QUESTIONS = [
   "How many total feedbacks?",
   "What's the sentiment breakdown?",
   "What are users saying about pricing?",
-
+  "How many negative feedbacks are related to pricing, and what are users complaining about?"
 ];
 
 /* ── Markdown-lite renderer (bold, bullets, code) ───────────────────── */

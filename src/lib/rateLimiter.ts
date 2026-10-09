@@ -3,10 +3,6 @@ import { Ratelimit } from "@upstash/ratelimit";
 
 const redis = Redis.fromEnv();
 
-/**
- * Wraps a Ratelimit instance so that Redis connection errors fail-open
- * (allow the request) instead of throwing and causing a 500.
- */
 function makeSafeLimiter(limiter: Ratelimit) {
   return {
     limit: async (key: string) => {
@@ -43,5 +39,5 @@ export const passwordUpdateLimiter = makeSafeLimiter(new Ratelimit({
 
 export const chatLimiter = makeSafeLimiter(new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(30, "1 m"),
+  limiter: Ratelimit.slidingWindow(3, "1 m"),
 }));
