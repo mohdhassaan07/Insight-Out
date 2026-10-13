@@ -4,6 +4,7 @@ import { executeSQLPath } from "@/src/lib/chat/sqlPath";
 import { executeSemanticPath } from "@/src/lib/chat/semanticPath";
 import { HYBRID_RESPONSE_PROMPT } from "@/src/lib/chat/responseGenerator";
 import type { ChatResponse } from "@/src/lib/chat/sqlPath";
+import type { ConversationMessage } from "@/src/lib/chat/history";
 
 /**
  * Execute the hybrid path — combines SQL (analytical) and semantic (meaning-based) retrieval.
@@ -13,6 +14,8 @@ import type { ChatResponse } from "@/src/lib/chat/sqlPath";
  * 2. Combine both results
  * 3. LLM generates a comprehensive answer with both quantitative and qualitative insights
  *
+ * Accepts conversation history so follow-up questions are resolved correctly.
+ *
  * Example:
  *   "How many negative feedbacks are related to pricing, and what are users complaining about?"
  *   → SQL returns: count = 98
@@ -21,25 +24,34 @@ import type { ChatResponse } from "@/src/lib/chat/sqlPath";
  */
 export async function executeHybridPath(
   userMessage: string,
-  organizationId: string
+  organizationId: string,
+  history: ConversationMessage[] = []
 ): Promise<ChatResponse> {
-  // Run both paths in parallel for speed
+  // Run both paths in parallel for speed, passing history to each
   const [sqlResult, semanticResult] = await Promise.all([
-    executeSQLPath(userMessage, organizationId).catch((err) => ({
+    executeSQLPath(userMessage, organizationId, history).catch((err) => ({
       answer: `Analytics data unavailable: ${err.message}`,
       queryType: "SQL" as const,
     })),
-    executeSemanticPath(userMessage, organizationId).catch((err) => ({
+    executeSemanticPath(userMessage, organizationId, history).catch((err) => ({
       answer: `Semantic search unavailable: ${err.message}`,
       queryType: "SEMANTIC" as const,
     })),
   ]);
 
+  // Build history context for the synthesis LLM call
+  const historyText =
+    history.length > 0
+      ? history
+        .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`)
+        .join("\n") + "\n\n"
+      : "";
+
   // Combine both results into a single LLM call for a coherent response
   const { text: answer } = await generateText({
     model: groq("openai/gpt-oss-120b"),
     system: HYBRID_RESPONSE_PROMPT,
-    prompt: `User question: ${userMessage}
+    prompt: `${historyText}User question: ${userMessage}
 
 Analytics result:
 ${sqlResult.answer}
@@ -55,3 +67,4 @@ ${semanticResult.answer}`,
     citations: "citations" in semanticResult ? semanticResult.citations : undefined,
   };
 }
+

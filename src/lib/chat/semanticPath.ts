@@ -4,6 +4,7 @@ import { generateEmbedding } from "@/src/lib/embeddings";
 import { SEMANTIC_RESPONSE_PROMPT } from "@/src/lib/chat/responseGenerator";
 import prisma from "@/src/lib/prisma";
 import type { ChatResponse } from "@/src/lib/chat/sqlPath";
+import type { ConversationMessage } from "@/src/lib/chat/history";
 
 /**
  * Execute the semantic search path for meaning-based questions.
@@ -12,10 +13,13 @@ import type { ChatResponse } from "@/src/lib/chat/sqlPath";
  * 1. Embed the user's question using text-embedding-004
  * 2. pgvector cosine similarity search against stored feedback embeddings
  * 3. LLM summarizes the relevant feedback with citations
+ *
+ * Accepts conversation history so the LLM summarizer can resolve follow-ups.
  */
 export async function executeSemanticPath(
   userMessage: string,
-  organizationId: string
+  organizationId: string,
+  history: ConversationMessage[] = []
 ): Promise<ChatResponse> {
   // 1. Embed the user's query
   const queryEmbedding = await generateEmbedding(userMessage);
@@ -57,11 +61,19 @@ export async function executeSemanticPath(
     )
     .join("\n");
 
-  // 4. Summarize with citations using the LLM
+  // 4. Build prompt — prepend history so the LLM can handle follow-ups
+  const historyText =
+    history.length > 0
+      ? history
+        .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`)
+        .join("\n") + "\n\n"
+      : "";
+
+  // 5. Summarize with citations using the LLM
   const { text: answer } = await generateText({
     model: groq("openai/gpt-oss-120b"),
     system: SEMANTIC_RESPONSE_PROMPT,
-    prompt: `User question: ${userMessage}\n\nRelevant feedback entries:\n${feedbackContext}`,
+    prompt: `${historyText}User question: ${userMessage}\n\nRelevant feedback entries:\n${feedbackContext}`,
     temperature: 0.3,
   });
 
@@ -79,3 +91,4 @@ export async function executeSemanticPath(
     },
   };
 }
+

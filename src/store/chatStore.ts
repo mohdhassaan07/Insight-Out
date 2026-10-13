@@ -20,6 +20,7 @@ export interface ChatMessage {
 
 interface ChatState {
   messages: ChatMessage[];
+  chatId: string | null;
   isOpen: boolean;
   isLoading: boolean;
   error: string | null;
@@ -31,8 +32,9 @@ interface ChatState {
   clearMessages: () => void;
 }
 
-export const useChatStore = create<ChatState>((set) => ({
+export const useChatStore = create<ChatState>((set, get) => ({
   messages: [],
+  chatId: null,
   isOpen: false,
   isLoading: false,
   error: null,
@@ -56,10 +58,12 @@ export const useChatStore = create<ChatState>((set) => ({
     }));
 
     try {
+      // Include chatId in the request so the backend loads history
+      const { chatId } = get();
       const res = await fetch("/api/v1/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: content }),
+        body: JSON.stringify({ message: content, chatId }),
       });
 
       if (!res.ok) {
@@ -83,6 +87,7 @@ export const useChatStore = create<ChatState>((set) => ({
 
       set((state) => ({
         messages: [...state.messages, assistantMessage],
+        chatId: data.chatId ?? state.chatId,
         isLoading: false,
       }));
     } catch (err: unknown) {
@@ -92,5 +97,5 @@ export const useChatStore = create<ChatState>((set) => ({
     }
   },
 
-  clearMessages: () => set({ messages: [], error: null }),
+  clearMessages: () => set({ messages: [], chatId: null, error: null }),
 }));

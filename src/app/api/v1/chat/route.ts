@@ -5,6 +5,12 @@ import { routeQuery } from "@/src/lib/chat/router";
 import { executeSQLPath } from "@/src/lib/chat/sqlPath";
 import { executeSemanticPath } from "@/src/lib/chat/semanticPath";
 import { executeHybridPath } from "@/src/lib/chat/hybridPath";
+import {
+  verifyChatOwnership,
+  createChat,
+  loadHistory,
+  saveMessages,
+} from "@/src/lib/chat/history";
 
 export async function POST(req: Request) {
   const startTime = Date.now();
@@ -23,35 +29,59 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { message } = await req.json();
+    const { message, chatId: incomingChatId } = await req.json();
     if (!message || typeof message !== "string" || message.trim().length === 0) {
       return NextResponse.json({ error: "Message is required" }, { status: 400 });
     }
 
+    const userId = auth.session.user.id;
     const organizationId = auth.session.user.organizationId;
     const trimmedMessage = message.trim();
 
-    // 3. Route the query
-    const route = await routeQuery(trimmedMessage);
+    // 3. Resolve chat session — create new or verify ownership of existing
+    let chatId: string;
+    if (incomingChatId) {
+      try {
+        // Ensures the authenticated user actually owns this chat
+        chatId = await verifyChatOwnership(incomingChatId, userId, organizationId);
+      } catch {
+        return NextResponse.json(
+          { error: "Chat not found or access denied" },
+          { status: 403 }
+        );
+      }
+    } else {
+      // First message — create a new chat session
+      chatId = await createChat(userId, organizationId, trimmedMessage);
+    }
 
-    // 4. Execute the appropriate path
+    // 4. Load previous messages from PostgreSQL (latest 20, oldest→newest)
+    const history = await loadHistory(chatId);
+
+    // 5. Route the query — history lets the router classify follow-up questions
+    const route = await routeQuery(trimmedMessage, history);
+
+    // 6. Execute the appropriate path, passing history for context
     let response;
     switch (route.type) {
       case "SQL":
-        response = await executeSQLPath(trimmedMessage, organizationId);
+        response = await executeSQLPath(trimmedMessage, organizationId, history);
         break;
       case "SEMANTIC":
-        response = await executeSemanticPath(trimmedMessage, organizationId);
+        response = await executeSemanticPath(trimmedMessage, organizationId, history);
         break;
       case "HYBRID":
-        response = await executeHybridPath(trimmedMessage, organizationId);
+        response = await executeHybridPath(trimmedMessage, organizationId, history);
         break;
     }
 
-    // 5. Add timing metadata
-    response.metadata = { executionTimeMs: Date.now() - startTime };
+    // 7. Persist user message + assistant reply atomically once response is ready
+    await saveMessages(chatId, trimmedMessage, response.answer);
 
-    return NextResponse.json(response);
+    // 8. Return response — include chatId so client can continue the conversation
+    response.metadata = { executionTimeMs: Date.now() - startTime };
+    return NextResponse.json({ ...response, chatId });
+
   } catch (error: unknown) {
     console.error("Chat API error:", error);
     return NextResponse.json(

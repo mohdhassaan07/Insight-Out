@@ -69,3 +69,13 @@ export type CsvUpload = Prisma.CsvUploadModel
  * 
  */
 export type Keyword = Prisma.KeywordModel
+/**
+ * Model Chat
+ * 
+ */
+export type Chat = Prisma.ChatModel
+/**
+ * Model ChatMessage
+ * 
+ */
+export type ChatMessage = Prisma.ChatMessageModel

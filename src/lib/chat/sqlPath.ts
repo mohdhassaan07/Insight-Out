@@ -3,6 +3,7 @@ import { groq } from "@ai-sdk/groq";
 import prisma from "@/src/lib/prisma";
 import { createChatTools } from "@/src/lib/chat/tools";
 import { formatResponse } from "@/src/lib/chat/responseGenerator";
+import type { ConversationMessage } from "@/src/lib/chat/history";
 
 /**
  * Chat response type shared across all paths.
@@ -170,12 +171,28 @@ function injectOrganizationFilter(sql: string): string {
 // ── Tool-based path (primary for simple queries) ───────────────────────
 
 /**
+ * Build a prompt string that prepends conversation history to the user's
+ * current question, giving the LLM necessary context for follow-ups.
+ */
+function buildPromptWithHistory(
+  userMessage: string,
+  history: ConversationMessage[]
+): string {
+  if (history.length === 0) return userMessage;
+  const historyText = history
+    .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`)
+    .join("\n");
+  return `Previous conversation:\n${historyText}\n\nCurrent question: ${userMessage}`;
+}
+
+/**
  * Try to answer the question using controlled tool functions first.
  * The LLM chooses which tool(s) to call, the AI SDK executes them.
  */
 async function tryToolPath(
   userMessage: string,
-  organizationId: string
+  organizationId: string,
+  history: ConversationMessage[]
 ): Promise<ChatResponse | null> {
   try {
     const tools = createChatTools(organizationId);
@@ -187,7 +204,7 @@ Answer the user's question using the available tools.
 Use the tools to query the database, then provide a clear, data-driven answer.
 Be concise. Use bullet points when appropriate. Include actual numbers.
 Do NOT fabricate data — only use data returned by the tools.`,
-      prompt: userMessage,
+      prompt: buildPromptWithHistory(userMessage, history),
       tools,
       stopWhen: stepCountIs(3),
       temperature: 0,
@@ -215,13 +232,14 @@ Do NOT fabricate data — only use data returned by the tools.`,
  */
 async function rawSQLPath(
   userMessage: string,
-  organizationId: string
+  organizationId: string,
+  history: ConversationMessage[]
 ): Promise<ChatResponse> {
-  // 1. LLM generates SQL
+  // 1. LLM generates SQL (history helps resolve follow-ups like "break that down by sentiment")
   const { text: rawSQL } = await generateText({
     model: groq("openai/gpt-oss-120b"),
     system: SQL_SYSTEM_PROMPT,
-    prompt: userMessage,
+    prompt: buildPromptWithHistory(userMessage, history),
     temperature: 0,
   });
 
@@ -248,15 +266,17 @@ async function rawSQLPath(
 /**
  * Execute the SQL path for analytical/structured questions.
  * First tries controlled tool functions, falls back to raw SQL generation if needed.
+ * Accepts conversation history to support follow-up questions.
  */
 export async function executeSQLPath(
   userMessage: string,
-  organizationId: string
+  organizationId: string,
+  history: ConversationMessage[] = []
 ): Promise<ChatResponse> {
   // Try tools first (safer, more controlled)
-  const toolResult = await tryToolPath(userMessage, organizationId);
+  const toolResult = await tryToolPath(userMessage, organizationId, history);
   if (toolResult) return toolResult;
 
   // Fallback to raw SQL generation
-  return rawSQLPath(userMessage, organizationId);
+  return rawSQLPath(userMessage, organizationId, history);
 }
