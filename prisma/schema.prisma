@@ -19,6 +19,7 @@ model User{
   createdAt DateTime  @default(now())
   sessionVersion Int @default(1)
   sentInvites OrganizationInvite[] @relation("InvitedByUser")
+  chats Chat[]
 }
 
 model Organization{
@@ -32,6 +33,7 @@ model Organization{
   csvUploads  CsvUpload[]
   keywords Keyword[]
   invites OrganizationInvite[]
+  chats Chat[]
 }
 
 model OrganizationInvite {
@@ -87,6 +89,30 @@ model Keyword {
   @@index([organizationId])
   @@unique([organizationId, name])
 }
+
+model Chat{
+  id  String  @id  @default(uuid())
+  userId  String
+  user    User    @relation(fields : [userId], references : [id])
+  organizationId  String
+  organization  Organization  @relation(fields : [organizationId], references : [id])
+  messages ChatMessage[]
+  title   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model ChatMessage{
+  id  String  @id  @default(uuid())
+  chatId  String
+  chat  Chat  @relation(fields : [chatId], references : [id])
+  sender  String 
+  message  String
+  createdAt DateTime  @default(now())
+
+  @@index([chatId, createdAt])
+}
+
 
 enum Plan{
   Free
