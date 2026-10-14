@@ -50,7 +50,7 @@ function renderMarkdown(text: string) {
           : content;
       elements.push(
         <div key={i} className="flex items-start gap-2 ml-1">
-          <span className="text-indigo-400 mt-1.5 shrink-0 text-[8px]">●</span>
+          <span className="text-indigo-600 dark:text-indigo-400 mt-1.5 shrink-0 text-[8px]">●</span>
           <span>{bulletContent}</span>
         </div>
       );
@@ -77,7 +77,7 @@ function renderMarkdown(text: string) {
           : content;
       elements.push(
         <div key={i} className="flex items-start gap-2 ml-1">
-          <span className="text-indigo-400 font-medium shrink-0 text-xs mt-0.5">
+          <span className="text-indigo-600 dark:text-indigo-400 font-medium shrink-0 text-xs mt-0.5">
             {num}.
           </span>
           <span>{numContent}</span>
@@ -94,7 +94,7 @@ function renderMarkdown(text: string) {
           j % 2 === 1 ? (
             <code
               key={j}
-              className="bg-zinc-700/50 px-1.5 py-0.5 rounded text-xs font-mono text-indigo-300"
+              className="bg-indigo-100 dark:bg-zinc-700/50 px-1.5 py-0.5 rounded text-xs font-mono text-indigo-700 dark:text-indigo-300"
             >
               {part}
             </code>
@@ -125,20 +125,20 @@ function renderMarkdown(text: string) {
 function sentimentColor(s: string) {
   switch (s) {
     case "Positive":
-      return "bg-emerald-500/20 text-emerald-300 border-emerald-500/30";
+      return "bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30";
     case "Negative":
-      return "bg-rose-500/20 text-rose-300 border-rose-500/30";
+      return "bg-rose-100 text-rose-700 border-rose-300 dark:bg-rose-500/20 dark:text-rose-300 dark:border-rose-500/30";
     default:
-      return "bg-amber-500/20 text-amber-300 border-amber-500/30";
+      return "bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30";
   }
 }
 
 /* ── Query type badge ───────────────────────────────────────────────── */
 function QueryTypeBadge({ type }: { type: string }) {
   const colors: Record<string, string> = {
-    SQL: "bg-blue-500/15 text-blue-300 border-blue-500/25",
-    SEMANTIC: "bg-purple-500/15 text-purple-300 border-purple-500/25",
-    HYBRID: "bg-teal-500/15 text-teal-300 border-teal-500/25",
+    SQL: "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-500/15 dark:text-blue-300 dark:border-blue-500/25",
+    SEMANTIC: "bg-purple-100 text-purple-700 border-purple-300 dark:bg-purple-500/15 dark:text-purple-300 dark:border-purple-500/25",
+    HYBRID: "bg-teal-100 text-teal-700 border-teal-300 dark:bg-teal-500/15 dark:text-teal-300 dark:border-teal-500/25",
   };
   return (
     <span
@@ -177,7 +177,7 @@ function Citations({
     <div className="mt-3">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 text-[11px] text-indigo-400 hover:text-indigo-300 transition-colors group"
+        className="flex items-center gap-1.5 text-[11px] text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors group"
       >
         <svg
           className={`w-3 h-3 transition-transform duration-200 ${open ? "rotate-90" : ""}`}
@@ -197,7 +197,7 @@ function Citations({
           {citations.entries.map((entry, i) => (
             <div
               key={entry.id || i}
-              className="p-2.5 rounded-lg bg-zinc-800/50 border border-zinc-700/50 text-xs"
+              className="p-2.5 rounded-lg bg-zinc-100 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50 text-xs"
             >
               <div className="flex items-center gap-2 mb-1.5">
                 <span
@@ -205,9 +205,9 @@ function Citations({
                 >
                   {entry.sentiment}
                 </span>
-                <span className="text-zinc-500 text-[10px]">{entry.category.replace("_", " ")}</span>
+                <span className="text-zinc-500 dark:text-zinc-500 text-[10px]">{entry.category.replace("_", " ")}</span>
               </div>
-              <p className="text-zinc-300 leading-relaxed italic">
+              <p className="text-zinc-600 dark:text-zinc-300 leading-relaxed italic">
                 &ldquo;{entry.text}&rdquo;
               </p>
             </div>
@@ -227,11 +227,11 @@ function TypingIndicator() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
       </div>
-      <div className="bg-zinc-800/80 border border-zinc-700/50 rounded-2xl rounded-tl-md px-4 py-3">
+      <div className="bg-white dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/50 rounded-2xl rounded-tl-md px-4 py-3 shadow-sm dark:shadow-none">
         <div className="flex items-center gap-1.5">
-          <span className="chatbot-typing-dot w-1.5 h-1.5 rounded-full bg-indigo-400" style={{ animationDelay: "0ms" }} />
-          <span className="chatbot-typing-dot w-1.5 h-1.5 rounded-full bg-indigo-400" style={{ animationDelay: "150ms" }} />
-          <span className="chatbot-typing-dot w-1.5 h-1.5 rounded-full bg-indigo-400" style={{ animationDelay: "300ms" }} />
+          <span className="chatbot-typing-dot w-1.5 h-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400" style={{ animationDelay: "0ms" }} />
+          <span className="chatbot-typing-dot w-1.5 h-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400" style={{ animationDelay: "150ms" }} />
+          <span className="chatbot-typing-dot w-1.5 h-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400" style={{ animationDelay: "300ms" }} />
         </div>
       </div>
     </div>
@@ -260,7 +260,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         </svg>
       </div>
       <div className="max-w-[85%] space-y-1">
-        <div className="bg-zinc-800/80 border border-zinc-700/50 rounded-2xl rounded-tl-md px-4 py-3 text-sm text-zinc-200">
+        <div className="bg-white dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/50 rounded-2xl rounded-tl-md px-4 py-3 text-sm text-zinc-700 dark:text-zinc-200 shadow-sm dark:shadow-none">
           {renderMarkdown(message.content)}
         </div>
 
@@ -399,16 +399,16 @@ export default function Chatbot() {
             w-95 max-w-[calc(100vw-2rem)]
             h-140 max-h-[calc(100vh-8rem)]
             flex flex-col
-            bg-zinc-900/95 backdrop-blur-xl
-            border border-zinc-700/50
+            bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl
+            border border-zinc-200 dark:border-zinc-700/50
             rounded-2xl
-            shadow-2xl shadow-black/40
+            shadow-2xl shadow-zinc-300/40 dark:shadow-black/40
             chatbot-panel-enter
             overflow-hidden
           "
         >
           {/* ── Header ──────────────────────────────────────────────── */}
-          <div className="relative px-5 py-4 border-b border-zinc-800/80 shrink-0">
+          <div className="relative px-5 py-4 border-b border-zinc-200 dark:border-zinc-800/80 shrink-0">
             {/* Gradient line */}
             <div className="absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-indigo-500 via-purple-500 to-pink-500 chatbot-gradient-line" />
 
@@ -420,10 +420,10 @@ export default function Chatbot() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-white">Insight AI</h3>
+                  <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">Insight AI</h3>
                   <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 chatbot-status-pulse" />
-                    <span className="text-[11px] text-zinc-400">Ready to help</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 chatbot-status-pulse" />
+                    <span className="text-[11px] text-zinc-500 dark:text-zinc-400">Ready to help</span>
                   </div>
                 </div>
               </div>
@@ -433,7 +433,7 @@ export default function Chatbot() {
                 {messages.length > 0 && (
                   <button
                     onClick={clearMessages}
-                    className="p-2 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+                    className="p-2 rounded-lg text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-zinc-800 transition-colors"
                     aria-label="Clear chat"
                     title="Clear chat"
                   >
@@ -445,7 +445,7 @@ export default function Chatbot() {
                 {/* Close */}
                 <button
                   onClick={closeChat}
-                  className="p-2 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+                  className="p-2 rounded-lg text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-zinc-800 transition-colors"
                   aria-label="Close chat"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -461,12 +461,12 @@ export default function Chatbot() {
             {/* Welcome state */}
             {messages.length === 0 && !isLoading && (
               <div className="flex flex-col items-center justify-center h-full text-center px-4 chatbot-msg-enter">
-                <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/20 flex items-center justify-center mb-4">
-                  <svg className="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-indigo-500/10 to-purple-500/10 dark:from-indigo-500/20 dark:to-purple-500/20 border border-indigo-200 dark:border-indigo-500/20 flex items-center justify-center mb-4">
+                  <svg className="w-8 h-8 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                 </div>
-                <h4 className="text-base font-semibold text-zinc-200 mb-1.5">
+                <h4 className="text-base font-semibold text-zinc-800 dark:text-zinc-200 mb-1.5">
                   Ask about your feedback
                 </h4>
                 <p className="text-xs text-zinc-500 mb-5 max-w-60">
@@ -480,15 +480,17 @@ export default function Chatbot() {
                       onClick={() => handleSuggestion(q)}
                       className="
                         w-full text-left px-3.5 py-2.5 rounded-xl
-                        bg-zinc-800/60 border border-zinc-700/40
-                        text-xs text-zinc-300
-                        hover:bg-zinc-800 hover:border-indigo-500/30 hover:text-indigo-300
+                        bg-zinc-50 border border-zinc-200
+                        dark:bg-zinc-800/60 dark:border-zinc-700/40
+                        text-xs text-zinc-600 dark:text-zinc-300
+                        hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700
+                        dark:hover:bg-zinc-800 dark:hover:border-indigo-500/30 dark:hover:text-indigo-300
                         transition-all duration-200
                         group
                       "
                     >
                       <span className="flex items-center gap-2">
-                        <svg className="w-3 h-3 text-zinc-500 group-hover:text-indigo-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3 h-3 text-zinc-400 dark:text-zinc-500 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                         </svg>
                         {q}
@@ -509,11 +511,11 @@ export default function Chatbot() {
 
             {/* Error state */}
             {error && (
-              <div className="flex items-start gap-2 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 chatbot-msg-enter">
-                <svg className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-start gap-2 p-3 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 chatbot-msg-enter">
+                <svg className="w-4 h-4 text-rose-500 dark:text-rose-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <p className="text-xs text-rose-300">{error}</p>
+                <p className="text-xs text-rose-600 dark:text-rose-300">{error}</p>
               </div>
             )}
 
@@ -521,7 +523,7 @@ export default function Chatbot() {
           </div>
 
           {/* ── Input ───────────────────────────────────────────────── */}
-          <div className="px-4 pb-4 pt-2 border-t border-zinc-800/80 shrink-0">
+          <div className="px-4 pb-4 pt-2 border-t border-zinc-200 dark:border-zinc-800/80 shrink-0">
             <form onSubmit={handleSubmit} className="flex items-center gap-2">
               <div className="flex-1 relative">
                 <input
@@ -533,9 +535,9 @@ export default function Chatbot() {
                   disabled={isLoading}
                   className="
                     w-full px-4 py-2.5 rounded-xl
-                    bg-zinc-800/80 border border-zinc-700/50
-                    text-sm text-zinc-200 placeholder-zinc-500
-                    focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20
+                    bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/50
+                    text-sm text-zinc-800 dark:text-zinc-200 placeholder-zinc-400 dark:placeholder-zinc-500
+                    focus:outline-none focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-400/30 dark:focus:ring-indigo-500/20
                     disabled:opacity-50 disabled:cursor-not-allowed
                     transition-all duration-200
                   "
@@ -563,7 +565,7 @@ export default function Chatbot() {
               </button>
             </form>
 
-            <p className="text-center text-[10px] text-zinc-600 mt-2">
+            <p className="text-center text-[10px] text-zinc-400 dark:text-zinc-600 mt-2">
               Powered by AI · Responses based on your data
             </p>
           </div>
