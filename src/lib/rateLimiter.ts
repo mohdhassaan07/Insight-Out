@@ -39,5 +39,5 @@ export const passwordUpdateLimiter = makeSafeLimiter(new Ratelimit({
 
 export const chatLimiter = makeSafeLimiter(new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(3, "1 m"),
+  limiter: Ratelimit.slidingWindow(10, "1 m"),
 }));
